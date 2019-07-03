@@ -1,116 +1,82 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-This is a skeleton file that can serve as a starting point for a Python
-console script. To run this script uncomment the following lines in the
-[options.entry_points] section in setup.cfg:
-
-    console_scripts =
-         fibonacci = confluence.skeleton:run
-
-Then run `python setup.py install` which will install the command `fibonacci`
-inside your current environment.
-Besides console scripts, the header (i.e. until _logger...) of this file can
-also be used as template for Python modules.
-
-Note: This skeleton file can be safely removed if not needed!
-"""
-
-import argparse
-import sys
-import logging
-
-from confluence import __version__
-
-__author__ = "amikulichmines"
-__copyright__ = "amikulichmines"
-__license__ = "mit"
-
-_logger = logging.getLogger(__name__)
+import os
 
 
-def fib(n):
-    """Fibonacci example function
-
-    Args:
-      n (int): integer
-
-    Returns:
-      int: n-th Fibonacci number
+def read_file(fileName):
     """
-    assert n > 0
-    a, b = 1, 1
-    for i in range(n-1):
-        a, b = b, a+b
-    return a
+    Function: read_file
+    -------------------
+    Opens a file, creates an array, and puts each line from the file into the array
 
+    fileName: the name of the file in string format, with ".txt" or ".json"
+    folderPath: the current working directory of the desired file
 
-def parse_args(args):
-    """Parse command line parameters
+    returns: array that contains each line of the file.
 
-    Args:
-      args ([str]): command line parameters as list of strings
-
-    Returns:
-      :obj:`argparse.Namespace`: command line parameters namespace
+    :Example:
+    :code: `python`
+        with open(fileName, 'rb') as ifs:
+            lines = ifs.readlines()
     """
-    parser = argparse.ArgumentParser(
-        description="Just a Fibonnaci demonstration")
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='confluence {ver}'.format(ver=__version__))
-    parser.add_argument(
-        dest="n",
-        help="n-th Fibonacci number",
-        type=int,
-        metavar="INT")
-    parser.add_argument(
-        '-v',
-        '--verbose',
-        dest="loglevel",
-        help="set loglevel to INFO",
-        action='store_const',
-        const=logging.INFO)
-    parser.add_argument(
-        '-vv',
-        '--very-verbose',
-        dest="loglevel",
-        help="set loglevel to DEBUG",
-        action='store_const',
-        const=logging.DEBUG)
-    return parser.parse_args(args)
+    pass
 
 
-def setup_logging(loglevel):
-    """Setup basic logging
+folderPath = os.getcwd()
+fileName = "example1.txt"
+exampleArray = read_file(fileName, folderPath)
 
-    Args:
-      loglevel (int): minimum loglevel for emitting messages
+for i in range (len(exampleArray)):
+    print(exampleArray[i],"\n")
+
+
+#def write_file(fileName, folderPath, data):
+def write_file(fileobj, overwrite=False)
     """
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(level=loglevel, stream=sys.stdout,
-                        format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
+    Function: write_file
+    --------------------------------------
+    Opens a file (if no file by that name exists, creates a new file), creates an array, and puts each line from the file into the array
 
+    fileName: the name of the file in string format, with ".txt" or ".json"
+    folderPath: the current working directory of the created file
+    data: the line of data (string format) that goes into the 
+    
+    Parameters
+    ==========
+    :param fileobj: File object to which to write.
+    :type fileobj: str or any object that exposes a write method.
+    :param overwrite: Whether to overwrite the file if it already exists.
+        This is only valid if fileobj is a string.
+    :type overwrite: bool
 
-def main(args):
-    """Main entry point allowing external calls
-
-    Args:
-      args ([str]): command line parameter list
+    :return: None
+    
+    :Example:
+    :code: `python`
+        # library for operating system (OS) functions
+        import os
+        # does the file exist, and do we want to overwrite if so.
+        if os.path.isfile(fileName) and not overwrite:
+            raise IOError(f"{ofile} exists. Set overwrite=True to overwrite.")
+        # if the file object is a string, then open the corresponding filename
+        if isinstance(fileobj, str):
+            ofs = open(fileobj, "wb")
+        else:
+            # otherwise, assume the file object is a file, StringIO, etc. that exposes a write method.
+            ofs = fileobj
+        # write the data
+        ofs.write(data)
+        # if the file object was a string, then we opened it and should close it.
+        if fileobj is not ofs:
+            ofs.close()
+        return
     """
-    args = parse_args(args)
-    setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print("The {}-th Fibonacci number is {}".format(args.n, fib(args.n)))
-    _logger.info("Script ends here")
+    pass
 
 
-def run():
-    """Entry point for console_scripts
-    """
-    main(sys.argv[1:])
+folderPath = os.getcwd()
+fileName = "example1.txt"
+exampleArray = [0,1,2,3,4]
+array = exampleArray
 
-
-if __name__ == "__main__":
-    run()
+for i in range(len(exampleArray)):
+    data = array[i]
+    write_file(fileName, folderPath, data)

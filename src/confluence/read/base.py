@@ -1,3 +1,4 @@
+
 class BaseReader(object):
     """
     Base reader agent for abstracting the details of reading data
@@ -7,15 +8,35 @@ class BaseReader(object):
     This object acts as an iterator, serving data from the source
     one chunk at a time, for example, line-by-line if the derived
     reader is to a local file object.
-    """
-    def __init__(self):
-        pass
 
+    Example
+    =======
+    :code:`python`
+        reader = BaseReader()
+        reader.open('foo.txt')
+        for line in reader:
+            print(line)
+        reader.close()
+
+    :code:`python`
+        reader = BaseReader('foo.txt')
+        for line in reader:
+            print(line)
+        reader.close()
+    """
+
+    def __init__(self, file):
+        self.file = file
+
+    # Attribute proxy for wrapped file object
 
     def __iter__(self):
-        return self
+        return iter(self.file)
 
 
     def __next__(self):
-        raise NotImplementedError(
-            "__next__ must be implemented in all Readers.")
+        return next(self.file)
+
+    def read(self):
+        pass
+
