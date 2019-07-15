@@ -33,7 +33,33 @@ class Excel_reader():
         except IOError:
             raise IOError('1 or more empty columns found in file ', filename)
 
-    def _check_for_duplicates(self, filename, dataframe):
+    def _check_for_duplicates(self, filename, dataframe, column=['Sample Name']):
+        """
+        Functions: raise an error if a duplicate sample name is found
+        :param filename: name of the file
+        :param dataframe: excel spreadsheet data
+        :return: none
+        """
+
+        try:
+            df = pd.DataFrame(dataframe, column)
+            duplicated = df.duplicated()
+            if duplicated.any():
+                raise IOError
+        except IOError:
+            raise IOError('Duplicate sample name in file ', filename)
+
+    def _remove_duplicates(self, dataframe):
+        """
+                function: Removes duplicate rows
+                :param dataframe: excel spreadsheet data
+                :return: dataframe with no duplicates
+                """
+
+        unduplicated = dataframe.drop_duplicates()
+        return unduplicated
+
+    def _check_for_merge_conflict(self, dataframe):
         """
 
         :param filename: name of the file
@@ -47,13 +73,17 @@ class Excel_reader():
             if duplicated.any():
                 raise IOError
         except IOError:
-            raise IOError('Duplicate sample name in file ', filename)
+            raise IOError('Merge conflict')
 
-    def write_to_file(self):
-        pass
-
-    def remove_duplicates(self):
-        pass
+    def write(self, filename):
+        """
+        function: write a dataframe to excel
+        :param filename:
+        :return: none
+        """
+        writer = pd.ExcelWriter(filename, engine='xlsxwriter')
+        self.combined.to_excel(writer, sheet_name='Sheet1')
+        writer.save()
 
     def merge(self):
         """
@@ -66,5 +96,7 @@ class Excel_reader():
             self._check_if_empty(filename, ifs)
             self._check_for_duplicates(filename, ifs)
             self.combined = pd.concat([self.combined, ifs])
+            self.combined = self._remove_duplicates(self.combined)
+            self._check_for_merge_conflict(self.combined)
         self._close
         return self.combined
