@@ -11,11 +11,12 @@ class BaseReader(object):
     def __init__(self):
         pass
 
-
     def __iter__(self):
         return self
-
 
     def __next__(self):
         raise NotImplementedError(
             "__next__ must be implemented in all Readers.")
+
+    def as_dataframe(self, *args, **kwds):
+        raise IOError("Cannot return object as a pandas.DataFrame.")
