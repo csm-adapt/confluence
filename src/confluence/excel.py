@@ -1,4 +1,3 @@
-from confluence.io.base import BaseReader
 import pandas as pd
 
 class ExcelReader():
