@@ -18,7 +18,7 @@ def merge(dataframes, sheetname):
     """
     fnames = list(dataframes.keys())
     dfs = list(dataframes.values())
-    df = join_many_dataframes(dfs)
+    join_many_dataframes(dfs)
     for i, j in product(range(len(fnames)), range(len(fnames))):
         if j <= i:
             continue
@@ -26,12 +26,11 @@ def merge(dataframes, sheetname):
         rhs = fnames[j]
         left = dfs[i]
         right = dfs[j]
-        df = merge_conflict(df, join_two_dataframes(left, right), lhs, rhs, sheetname) #Checks for merge conflict
-    df = fix_dataframe(df)
-    return df
+        dfs[i], dfs[j] = merge_conflict(left, right, lhs, rhs, sheetname) #Checks for merge conflict
+    return fix_dataframe(join_many_dataframes(dfs))
 
 
-def merge_conflict(bigdf, smalldf, lhs, rhs, sheetname, column='Sample Name'):
+def merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Name'):
     """
     :param bigdf: Concatenated dataframe of all the files being entered
     :param smalldf: smaller concatenated dataframes of the two files being compared
@@ -41,23 +40,26 @@ def merge_conflict(bigdf, smalldf, lhs, rhs, sheetname, column='Sample Name'):
     :param column: Column of all the sample names
     :return: A version of the big dataframe that is free of merge conflicts
     """
-    duplicates = (list(smalldf[column][smalldf[[column]].duplicated(keep='last')].drop_duplicates()))
-    #creates a list of all the duplicate sample names found, regardless of if they will eventually
-    #cause a merge conflict
+    df = join_two_dataframes(left, right)
+    duplicates = (list(df[column][df[[column]].duplicated(keep='last')].drop_duplicates()))
+    # Creates a list of all the duplicate sample names found, regardless of if they will eventually
+    # cause a merge conflict
     for name in duplicates:
-        temp = smalldf[smalldf[column] == name]#creates a temporary dataframe of all the rows with duplicate
-                                                #sample names
+        temp = df[df[column] == name]
+        # creates a temporary dataframe of all the rows with duplicate sample names
         for key in temp:
-            #This for loop iterates through each of the columns in the temporary dataframe to check how many
-            #unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
-            #function.
+            # This for loop iterates through each of the columns in the temporary dataframe to check how many
+            # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
+            # function.
             instances = temp[key].nunique()
             if instances > 1:
-                bigdf.at[bigdf[column] == name, key] = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[column].values[0], sheetname)
-                #The above line is pretty long, so I will shorten it later. Basically, its function is to take all the
-                #values in the big dataframe that have the repeated sample name and change them to a certain value.
-                #This value is determined by the choice that the user selects.
-    return bigdf
+                choice = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[column].values[0], sheetname)
+                right.at[right[column] == name, key] = choice
+                left.at[left[column] == name, key] = choice
+                # The above if statement checks if there is more than one unique value per column. If the global default
+                # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
+                # values in each dataframe to match this.
+    return [fix_dataframe(left), fix_dataframe(right)]
 
 
 def join_two_dataframes(lhs, rhs):
@@ -108,6 +110,26 @@ def read(filename, ftype, sheetname):
         raise IOError(f"{ftype} is not a recognized file type.")
 
 
+def write(files, filename, ftype):
+    """
+    :param filename: name of file
+    :param ftype: the type of the file ('xlsx', 'txt', etc)
+    :param sheetname: name of the sheet being read
+    :return: appropriate file reader
+    """
+    if ftype is None:
+        ftype = guess_file_type(filename)
+    try:
+        return {
+            'xlsx': write_excel,
+            #'txt': write_text,
+            #'csv': write_csv,
+            #'json': write_json
+        }[ftype](files, filename)
+    except KeyError:
+        raise IOError(f"{ftype} is not a recognized file type.")
+
+
 def check_for_sample_name_completeness(df, filename, sheetname='Sheet 1', column='Sample Name'):
     """
     :param df: dataframe to check
@@ -141,7 +163,7 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet 1', column='
             instances = temp[key].nunique()
             if instances > 1:
                 df.loc[df[column] == name, key] = make_user_choose_one_file(temp[key].values, key, filename, sheetname, temp[column].values[0])
-    return df
+    return fix_dataframe(df)
 
 
 def check_files_are_represented_in_dataframe(self):
@@ -172,7 +194,7 @@ def combiner(df):
     return df_valid
 
 
-def fix_dataframe(df):
+def fix_dataframe(df, column='Sample Name'):
     """
     Function: Takes a dataframe with several identical sample name entries and corrects it. A previous
     function has already made sure there will not be a merge conflict.
@@ -180,12 +202,28 @@ def fix_dataframe(df):
     :return: dataframe without diplicated sample name entries
     """
     combined = pd.DataFrame()
-    duplicates = (list(df['Sample Name'][df[['Sample Name']].duplicated(keep='last')].drop_duplicates()))
+    duplicates = (list(df[column][df[[column]].duplicated(keep='last')].drop_duplicates()))
     for name in duplicates:
-        temp = df[df['Sample Name'] == name]
+        temp = df[df[column] == name]
         combined = pd.concat([combined, combiner(temp)])
-    df = df.drop_duplicates(subset=['Sample Name'], keep=False)
+    df = df.drop_duplicates(subset=[column], keep=False)
     return join_two_dataframes(df, combined)
+
+
+# def read_excel(filename, sheetname):
+#     """
+#     function: reads excel files
+#     :param filename: file name to be read
+#     :param sheet: name of the sheet
+#     :return: reader object for a specific sheet name
+#     """
+#
+#     sheetnames = ExcelReader(filename).sheetnames()
+#     readers = [ExcelReader(filename, sheetname=sheet) for sheet in sheetnames]
+#     for reader in readers:
+#         df = reader.as_dataframe(sheetname)
+#     sheetReader = ExcelReader(filename, sheetname=sheetname)
+#     return sheetReader
 
 
 def read_excel(filename, sheetname):
@@ -196,12 +234,8 @@ def read_excel(filename, sheetname):
     :return: reader object for a specific sheet name
     """
 
-    sheetnames = ExcelReader(filename).sheetnames()
-    readers = [ExcelReader(filename, sheetname=sheet) for sheet in sheetnames]
-    for reader in readers:
-        df = reader.as_dataframe(sheetname)
-    sheetReader = ExcelReader(filename, sheetname=sheetname)
-    return sheetReader
+    reader = ExcelReader(filename, sheetname=sheetname)
+    return reader
 
 
 def make_user_choose_one_file(arr, column, filename='None', sheetname='Sheet1', sample='None'):
@@ -243,12 +277,15 @@ def make_user_choose_two_files(arr, file1, file2, column, sample, sheetname='She
     :param sheetname: sheet that the values are from
     :return: value that the user choses
     """
-    print('Merge conflict between', file1, 'and', file2, 'in sheet', sheetname, 'for sample', sample, 'under column', column,'\n',
-          '\n1: Accept value', arr[0], 'from file', file1,
-          '\n2: Accept value', arr[1], 'from file', file2,
-          '\n3: Join files into a list',
-          '\n4: Abort the merge\n')
-    return switch(int(input('Enter the number\n')), arr)
+    if default is not None:
+        return switch(convert_merge_default(default), arr)
+    else:
+        print('Merge conflict between', file1, 'and', file2, 'in sheet', sheetname, 'for sample', sample, 'under column', column,'\n',
+              '\n1: Accept value', arr[0], 'from file', file1,
+              '\n2: Accept value', arr[1], 'from file', file2,
+              '\n3: Join files into a list',
+              '\n4: Abort the merge\n')
+        return switch(int(input('Enter the number\n')), arr)
 
 
 def switch(argument, values):
@@ -262,11 +299,11 @@ def switch(argument, values):
     switcher = {
         1: values[0],
         2: values[1],
-        3: values,
+        3: str(list(values)),
         4: 'exit',
     }
     if switcher.get(argument) is 'exit':
-        exit()
+        raise ValueError('Aborting merge due to merge conflict')
     return switcher.get(argument, "Invalid selection")
 
 
@@ -282,13 +319,14 @@ def get_all_sheetnames(files):
     return list(dict.fromkeys(arr))#Eliminates duplicate names while still preserving order
 
 
-def excel_parser(files, writer):
+def write_excel(files, outfile):
     """
     Function: takes all the input excel files and outputs them to one single file
     :param files: A dictionary of filenames and their corresponding tile types
-    :param writer: An instance of the Excel Writer that can be used to write to the sheet
+    :param outfile: The output file to write to
     :return: none
     """
+    writer = ExcelWriter(outfile)
     validate = QMDataFrameValidator()
     validate.add_callback(check_for_sample_name_completeness)
     validate.add_callback(check_for_sample_name_uniqueness)
@@ -301,6 +339,42 @@ def excel_parser(files, writer):
                 temp.update({fname: ftype})
         dataframes = {fname: validate(read(fname, ftype, sheet).as_dataframe(), fname, sheet) for fname, ftype in temp.items()}
         writer.write_to_sheet(merge(dataframes, sheet), sheet)
+    writer.save_and_close()
+
+
+def convert_merge_default(input):
+    """
+    :param input: arg passed into the merge default by the user
+    :return: value from 1 to 4 to give to the merge_conflict function should a conflict arise
+    """
+    return{
+        'first': 1,
+        'second': 2,
+        'join': 3,
+        'abort': 4
+    }[input]
+
+
+def get_file(fname, ftype):
+    if ftype is None:
+        ftype = guess_file_type(fname)
+    return os.path.join(os.path.splitext(fname)[0] + "." + ftype.strip('.'))
+
+
+def parse_args():
+    """
+    function: return a parser with all the args the user passes to the function
+    :return: parser containing all the args
+    """
+    parser = argparse.ArgumentParser(description='parse arguments')
+    parser.add_argument('infiles', nargs='+', help='input file')
+    parser.add_argument('-o', '--output', help='output file')
+    parser.add_argument('-i', '--input', nargs=2, help='file type', action='append')
+    parser.add_argument('-m', '--mergedefault', help='default solution to merges')
+    parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
+    parser.add_argument('--outputformat', help='specify output format')
+    parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
+    return parser.parse_args()
 
 
 def main():
@@ -308,21 +382,19 @@ def main():
     function: takes arguments from arg parse and puts the files into an excel parser
     :return:
     """
-    parser = argparse.ArgumentParser(description='parse arguments')
-    parser.add_argument('infiles', nargs='+', help='input file')
-    parser.add_argument('-o', '--output', help='output file')
-    parser.add_argument('-i', '--input', nargs=2, help='file type', action='append')
-    args = parser.parse_args()
-    outfile = args.output
+    global default
+    args = parse_args()
     files = {infile: None for infile in args.infiles}
+    default = 'abort' if args.quiet else None
+    default = args.mergedefault if args.mergedefault is not None else 'abort'
+    default = None if args.interactive else default
     if args.input is not None:
-        files.update({infile[1]: infile[0] for infile in args.input})
-    writer = ExcelWriter(outfile)
-    excel_parser(files, writer)
-    writer.save_and_close()
+        files.update({get_file(infile[1], infile[0]): infile[0] for infile in args.input})
+    write(files, filename=get_file(args.output, args.outputformat), ftype=args.outputformat)
 
 
 main()
+
 
 
 
