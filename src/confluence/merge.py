@@ -5,20 +5,22 @@ import os
 from excel import ExcelReader #These are underlined red, indicating an error, however no error is thrown if
                                 #the code is run.
 from excel import ExcelWriter
+from text import TextReader
+from text import TextWriter
 from itertools import product
 from validator import QMDataFrameValidator #imports the validator
 
 
-def merge(dataframes, sheetname):
+def merge(fnames, dfs, sheetname):
     """
     Function: compare each of the dataframes and check for conflicts, then return a fixed dataframe
     :param lhs: filename of the left hand file
     :param rhs: filename of the right hand file
     :return:
     """
-    fnames = list(dataframes.keys())
-    dfs = list(dataframes.values())
-    join_many_dataframes(dfs)
+    fnames = list(fnames)
+    dfs = list(dfs)
+    #join_many_dataframes(dfs)
     for i, j in product(range(len(fnames)), range(len(fnames))):
         if j <= i:
             continue
@@ -42,7 +44,7 @@ def read(filename, ftype, sheetname):
     try:
         return {
             'xlsx': read_excel,
-            #'txt': read_text,
+            'txt': read_text,
             #'csv': read_csv,
             #'json': read_json
         }[ftype](filename, sheetname)
@@ -57,29 +59,34 @@ def read_excel(filename, sheetname):
     :param sheet: name of the sheet
     :return: reader object for a specific sheet name
     """
-
     reader = ExcelReader(filename, sheetname=sheetname)
     return reader
 
 
-def write(files, filename, ftype):
+def read_text(filename, sheetname):
+
+    reader = TextReader(filename)
+    return reader
+
+
+def write(files, outfile, outfiletype):
     """
     :param filename: name of file
     :param ftype: the type of the file ('xlsx', 'txt', etc)
     :param sheetname: name of the sheet being read
     :return: appropriate file reader
     """
-    if ftype is None:
-        ftype = guess_file_type(filename)
+    if outfiletype is None:
+        ftype = guess_file_type(outfile)
     try:
         return {
             'xlsx': write_excel,
-            #'txt': write_text,
+            'txt': write_text,
             #'csv': write_csv,
             #'json': write_json
-        }[ftype](files, filename)
+        }[outfiletype](files, outfile)
     except KeyError:
-        raise IOError(f"{ftype} is not a recognized file type.")
+        raise IOError(f"{outfiletype} is not a recognized file type.")
 
 
 def write_excel(files, outfile):
@@ -90,19 +97,14 @@ def write_excel(files, outfile):
     :return: none
     """
     writer = ExcelWriter(outfile)
-    validate = QMDataFrameValidator()
-    validate.add_callback(check_for_sample_name_completeness)
-    validate.add_callback(check_for_sample_name_uniqueness)
-    sheetnames = get_all_sheetnames(files)
-    for sheet in sheetnames:
-        temp = {}
-        for fname, ftype in files.items():
-            reader = ExcelReader(fname)
-            if sheet in reader.sheetnames():
-                temp.update({fname: ftype})
-        dataframes = {fname: validate(read(fname, ftype, sheet).as_dataframe(), fname, sheet) for fname, ftype in temp.items()}
-        writer.write_to_sheet(merge(dataframes, sheet), sheet)
+    for sheet in files['sheetname']:
+        writer.write_to_sheet(merge(files[files['sheetname'] == sheet]['filename'], files[files['sheetname'] == sheet]['dataframe'], sheet), sheet)
     writer.save_and_close()
+
+
+def write_text(files, outfile):
+    writer = TextWriter(outfile)
+    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
 
 
 def join_two_dataframes(lhs, rhs):
@@ -165,7 +167,7 @@ def check_for_merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Na
     return [fix_dataframe(left), fix_dataframe(right)]
 
 
-def check_for_sample_name_completeness(df, filename, sheetname='Sheet 1', column='Sample Name'):
+def check_for_sample_name_completeness(df, filename, sheetname='Sheet1', column='Sample Name'):
     """
     :param df: dataframe to check
     :param filename: name of the file
@@ -173,16 +175,16 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet 1', column
     :param column: name of the column that you are checking
     :return: dataframe with all entries in the 'column' filled. If there is an empty one, an error is thrown.
     """
-    try:
-        for i in range(len(df)):
-            if pd.isna(list(df[column])[i]) is True:
-                raise IOError
-        return df
-    except IOError:
-        IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+    #try:
+    for i in range(len(df)):
+        if pd.isna(list(df[column])[i]) is True:
+            raise IOError('du')
+    return df
+    #except IOError:
+        #IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
 
 
-def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet 1', column='Sample Name'):
+def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1', column='Sample Name'):
     """
     Functionality: Makes sure there are no repeated sample names, similar to the 'merge_conflict' function
     :param df: dataframe to check
@@ -343,6 +345,41 @@ def get_file(fname, ftype):
     return os.path.join(os.path.splitext(fname)[0] + "." + ftype.strip('.'))
 
 
+def create_file_df(filename, ftype):
+    """
+    :param filename: name of the file being passed to the function
+    :param ftype: type fo the file
+    :return: dataframe containing name, dataframe, type, and any sheetnames of the file
+    """
+    validate = QMDataFrameValidator()
+    validate.add_callback(check_for_sample_name_completeness)
+    validate.add_callback(check_for_sample_name_uniqueness)
+    df = pd.DataFrame(columns=['filename', 'dataframe', 'type', 'sheetname'])
+    if ftype == 'xlsx':
+        sheets = get_all_sheetnames([filename])
+    else:
+        sheets = [txtSheetname]
+    for sheetname in sheets:
+        df = df.append({'filename': filename,
+                        'dataframe': validate(read(filename, ftype, sheetname).as_dataframe(), filename, sheetname),
+                        'type': ftype,
+                        'sheetname': sheetname
+                        }, ignore_index=True)
+    #df.set_index('filename', inplace=True)
+    return df
+
+
+def find_default_action(args):
+    """
+    :param args: the argparser
+    :return: default merge action
+    """
+    default = 'abort' if args.quiet else None
+    default = args.mergedefault if args.mergedefault is not None else 'abort'
+    default = None if args.interactive else default
+    return default
+
+
 def parse_args():
     """
     function: return a parser with all the args the user passes to the function
@@ -354,6 +391,7 @@ def parse_args():
     parser.add_argument('-i', '--input', nargs=2, help='file type', action='append')
     parser.add_argument('-m', '--mergedefault', help='default solution to merges')
     parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
+    parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
     parser.add_argument('--outputformat', help='specify output format')
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
     return parser.parse_args()
@@ -365,18 +403,25 @@ def run():
     :return:
     """
     global default
+    global txtSheetname
+    files = pd.DataFrame()
     args = parse_args()
-    files = {infile: None for infile in args.infiles}
-    default = 'abort' if args.quiet else None
-    default = args.mergedefault if args.mergedefault is not None else 'abort'
-    default = None if args.interactive else default
+    infiles = {infile: guess_file_type(infile) for infile in args.infiles}
+    default = find_default_action(args)
+    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
     if args.input is not None:
-        files.update({get_file(infile[1], infile[0]): infile[0] for infile in args.input})
-    write(files, filename=get_file(args.output, args.outputformat), ftype=args.outputformat)
+        infiles.update({get_file(infile[1], infile[0]): infile[0] for infile in args.input})
+    for file in infiles:
+        # for each file in the list of files, a new row is added to the dataframe containing all the
+        # information in the file. The end result is a dataframe containing all the names, types, corresponding
+        # dataframes, and sheetnames of all the input files.
+        files = join_two_dataframes(files, create_file_df(file, infiles[file]))
+    write(files, outfile=get_file(args.output, args.outputformat), outfiletype=args.outputformat)
 
 
 if __name__ == "__main__":
     run()
+
 
 
 
@@ -449,3 +494,4 @@ if __name__ == "__main__":
 #
 # if __name__ == "__main__":
 #     run()
+
