@@ -2,11 +2,14 @@ import argparse
 import pandas as pd
 import numpy as np
 import os
-from excel import ExcelReader #These are underlined red, indicating an error, however no error is thrown if
-                                #the code is run.
-from excel import ExcelWriter
+from excel import ExcelReader  # These are underlined red, indicating an error, however no error is thrown if
+from excel import ExcelWriter  # the code is run.
 from text import TextReader
 from text import TextWriter
+from JSON import JSONReader
+from JSON import JSONWriter
+from CSV import CSVReader
+from CSV import CSVWriter
 from itertools import product
 from validator import QMDataFrameValidator #imports the validator
 
@@ -45,8 +48,8 @@ def read(filename, ftype, sheetname):
         return {
             'xlsx': read_excel,
             'txt': read_text,
-            #'csv': read_csv,
-            #'json': read_json
+            'csv': read_csv,
+            'json': read_json
         }[ftype](filename, sheetname)
     except KeyError:
         raise IOError(f"{ftype} is not a recognized file type.")
@@ -69,6 +72,16 @@ def read_text(filename, sheetname):
     return reader
 
 
+def read_json(filename, sheetname):
+    reader = JSONReader(filename)
+    return reader
+
+
+def read_csv(filename, sheetname):
+    reader = CSVReader(filename)
+    return reader
+
+
 def write(files, outfile, outfiletype):
     """
     :param filename: name of file
@@ -77,13 +90,13 @@ def write(files, outfile, outfiletype):
     :return: appropriate file reader
     """
     if outfiletype is None:
-        ftype = guess_file_type(outfile)
+        outfiletype = guess_file_type(outfile)
     try:
         return {
             'xlsx': write_excel,
             'txt': write_text,
-            #'csv': write_csv,
-            #'json': write_json
+            'csv': write_csv,
+            'json': write_json
         }[outfiletype](files, outfile)
     except KeyError:
         raise IOError(f"{outfiletype} is not a recognized file type.")
@@ -104,6 +117,16 @@ def write_excel(files, outfile):
 
 def write_text(files, outfile):
     writer = TextWriter(outfile)
+    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
+
+
+def write_json(files, outfile):
+    writer = JSONWriter(outfile)
+    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
+
+
+def write_csv(files, outfile):
+    writer = CSVWriter(outfile)
     writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
 
 
@@ -137,8 +160,8 @@ def guess_file_type(filename):
 
 def check_for_merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Name'):
     """
-    :param bigdf: Concatenated dataframe of all the files being entered
-    :param smalldf: smaller concatenated dataframes of the two files being compared
+    :param left: left dataframe
+    :param right: right dataframe
     :param lhs: file name 1
     :param rhs: file name 2
     :param sheetname: name of the sheet
@@ -178,7 +201,7 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1', column=
     #try:
     for i in range(len(df)):
         if pd.isna(list(df[column])[i]) is True:
-            raise IOError('du')
+            raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
     return df
     #except IOError:
         #IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
@@ -247,7 +270,8 @@ def make_user_choose_two_files(arr, file1, file2, column, sample, sheetname='She
     if default is not None:
         return switch(convert_merge_default(default), arr)
     else:
-        print('Merge conflict between', file1, 'and', file2, 'in sheet', sheetname, 'for sample', sample, 'under column', column,'\n',
+        print('Merge conflict between', file1, 'and', file2, 'in sheet',
+              sheetname, 'for sample', sample, 'under column', column, '\n',
               '\n1: Accept value', arr[0], 'from file', file1,
               '\n2: Accept value', arr[1], 'from file', file2,
               '\n3: Join files into a list',
@@ -386,7 +410,7 @@ def parse_args():
     :return: parser containing all the args
     """
     parser = argparse.ArgumentParser(description='parse arguments')
-    parser.add_argument('infiles', nargs='+', help='input file')
+    parser.add_argument('infiles', nargs='?', help='input file')
     parser.add_argument('-o', '--output', help='output file')
     parser.add_argument('-i', '--input', nargs=2, help='file type', action='append')
     parser.add_argument('-m', '--mergedefault', help='default solution to merges')
@@ -406,7 +430,7 @@ def run():
     global txtSheetname
     files = pd.DataFrame()
     args = parse_args()
-    infiles = {infile: guess_file_type(infile) for infile in args.infiles}
+    infiles = {infile: guess_file_type(infile) for infile in args.infiles} if args.infiles else {}
     default = find_default_action(args)
     txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
     if args.input is not None:
