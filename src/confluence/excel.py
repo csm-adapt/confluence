@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class ExcelReader():
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
         #super().__init__(self)
@@ -41,7 +42,7 @@ class ExcelWriter():
         self._filename = None
         self.set_filename(fname)
         self.sheetname = sheetname
-        self.writer = pd.ExcelWriter(fname, engine='xlsxwriter')
+        self.writer = pd.ExcelWriter(self.get_filename(), engine='xlsxwriter')
 
     def set_filename(self, fname):
         self._filename = fname
@@ -53,8 +54,20 @@ class ExcelWriter():
         with pd.ExcelWriter(self.get_filename()) as writer:
             self.df.to_excel(writer, index=False, sheet_name=sheetname)
 
+    def get_header(self, workbook):
+        return workbook.add_format({
+            'bold': True,
+            'text_wrap': False,
+            'border': 1,
+            'rotation': 70})
+
     def write_to_sheet(self, df, sheetname='Sheet1'):
-        df.to_excel(self.writer, sheet_name=sheetname, index=False)
+        df.to_excel(self.writer, sheet_name=sheetname, index=False, header=False, startrow=1)
+        workbook = self.writer.book
+        worksheet = self.writer.sheets[sheetname]
+        header_format = self.get_header(workbook)
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
 
     def save_and_close(self):
         self.writer.save()
