@@ -1,11 +1,11 @@
 import pandas as pd
-import numpy as np
 import json
+from base import BaseReader
 
 
-class JSONReader():
+class JSONReader(BaseReader):
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        #super().__init__(self)
+        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter
@@ -36,9 +36,9 @@ class JSONReader():
         return df
 
 
-class JSONWriter():
+class JSONWriter(BaseReader):
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        #super().__init__(self)
+        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter

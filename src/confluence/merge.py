@@ -14,7 +14,7 @@ from itertools import product
 from validator import QMDataFrameValidator #imports the validator
 
 
-def merge(fnames, dfs, sheetname):
+def merge(fnames, dfs, sheetname, column='Sample Name'):
     """
     Function: compare each of the dataframes and check for conflicts, then return a fixed dataframe
     :param lhs: filename of the left hand file
@@ -32,7 +32,7 @@ def merge(fnames, dfs, sheetname):
         left = dfs[i]
         right = dfs[j]
         dfs[i], dfs[j] = check_for_merge_conflict(left, right, lhs, rhs, sheetname) #Checks for merge conflict
-    return fix_dataframe(join_many_dataframes(dfs))
+    return fix_dataframe(join_many_dataframes(dfs)).sort_values([column])
 
 
 def read(filename, ftype, sheetname):
@@ -46,11 +46,11 @@ def read(filename, ftype, sheetname):
         ftype = guess_file_type(filename)
     try:
         return {
-            'xlsx': read_excel,
-            'txt': read_text,
-            'csv': read_csv,
-            'json': read_json
-        }[ftype](filename, sheetname)
+            'xlsx': read_excel(filename, sheetname),
+            'txt': read_text(filename),
+            'csv': read_csv(filename),
+            'json': read_json(filename)
+        }[ftype]
     except KeyError:
         raise IOError(f"{ftype} is not a recognized file type.")
 
@@ -66,18 +66,18 @@ def read_excel(filename, sheetname):
     return reader
 
 
-def read_text(filename, sheetname):
+def read_text(filename):
 
     reader = TextReader(filename)
     return reader
 
 
-def read_json(filename, sheetname):
+def read_json(filename):
     reader = JSONReader(filename)
     return reader
 
 
-def read_csv(filename, sheetname):
+def read_csv(filename):
     reader = CSVReader(filename)
     return reader
 
@@ -111,7 +111,7 @@ def write_excel(files, outfile):
     """
     writer = ExcelWriter(outfile)
     for sheet in files['sheetname']:
-        writer.write_to_sheet(merge(files[files['sheetname'] == sheet]['filename'], files[files['sheetname'] == sheet]['dataframe'], sheet), sheet)
+        writer.write(merge(files[files['sheetname'] == sheet]['filename'], files[files['sheetname'] == sheet]['dataframe'], sheet), sheet)
     writer.save_and_close()
 
 
@@ -410,7 +410,7 @@ def parse_args():
     :return: parser containing all the args
     """
     parser = argparse.ArgumentParser(description='parse arguments')
-    parser.add_argument('infiles', nargs='?', help='input file')
+    parser.add_argument('infiles', nargs='*', help='input file')
     parser.add_argument('-o', '--output', help='output file')
     parser.add_argument('-i', '--input', nargs=2, help='file type', action='append')
     parser.add_argument('-m', '--mergedefault', help='default solution to merges')

@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
+from base import BaseReader
 
 
-class CSVReader():
+class CSVReader(BaseReader):
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        #super().__init__(self)
+        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter
@@ -32,9 +33,9 @@ class CSVReader():
         return df
 
 
-class CSVWriter():
+class CSVWriter(BaseReader):
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        #super().__init__(self)
+        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter
