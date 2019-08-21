@@ -1,6 +1,6 @@
 import pandas as pd
 import json
-from base import BaseReader
+from confluence.base import BaseReader
 
 
 class JSONReader(BaseReader):

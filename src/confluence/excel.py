@@ -1,6 +1,6 @@
 import pandas as pd
-from base import BaseReader
-
+from confluence.base import BaseReader
+import os
 
 class ExcelReader(BaseReader):
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):

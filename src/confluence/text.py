@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from base import BaseReader
+from confluence.base import BaseReader
 
 
 class TextReader(BaseReader):

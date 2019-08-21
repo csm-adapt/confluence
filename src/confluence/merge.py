@@ -1,29 +1,42 @@
+import sys
+sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
 import argparse
 import pandas as pd
 import numpy as np
 import os
-from excel import ExcelReader  # These are underlined red, indicating an error, however no error is thrown if
-from excel import ExcelWriter  # the code is run.
-from text import TextReader
-from text import TextWriter
-from JSON import JSONReader
-from JSON import JSONWriter
-from CSV import CSVReader
-from CSV import CSVWriter
+from confluence.excel import ExcelReader
+from confluence.excel import ExcelWriter
+from confluence.text import TextReader
+from confluence.text import TextWriter
+from confluence.JSON import JSONReader
+from confluence.JSON import JSONWriter
+from confluence.CSV import CSVReader
+from confluence.CSV import CSVWriter
 from itertools import product
-from validator import QMDataFrameValidator #imports the validator
+from confluence.validator import QMDataFrameValidator  # imports the validator
 
 
-def merge(fnames, dfs, sheetname, column='Sample Name'):
+def merge(*args):
+    global txtSheetname
+    global default
+    txtSheetname = 'Sheet1'
+    default = 'first'
+    infiles = {file: None for file in args}
+    files = create_df_of_all_infiles(infiles)
+    return merge_dataframes(files['filename'], files['dataframe'], 'Sheet1')
+
+
+def merge_dataframes(fnames, dfs, sheetname):
     """
-    Function: compare each of the dataframes and check for conflicts, then return a fixed dataframe
-    :param lhs: filename of the left hand file
-    :param rhs: filename of the right hand file
+    function: takes in dataframes, compares them, then returns a single merged dataframe
+    :param fnames: all the filenames
+    :param dfs: all the dataframes
+    :param sheetname: the sheetname being analyzed
+    :param column: the column that represents the sample name
     :return:
     """
     fnames = list(fnames)
     dfs = list(dfs)
-    #join_many_dataframes(dfs)
     for i, j in product(range(len(fnames)), range(len(fnames))):
         if j <= i:
             continue
@@ -32,7 +45,8 @@ def merge(fnames, dfs, sheetname, column='Sample Name'):
         left = dfs[i]
         right = dfs[j]
         dfs[i], dfs[j] = check_for_merge_conflict(left, right, lhs, rhs, sheetname) #Checks for merge conflict
-    return fix_dataframe(join_many_dataframes(dfs)).sort_values([column])
+    df = fix_dataframe(join_many_dataframes(dfs))
+    return df.sort_values([df.columns[0]]).reset_index(drop=True)
 
 
 def read(filename, ftype, sheetname):
@@ -67,7 +81,6 @@ def read_excel(filename, sheetname):
 
 
 def read_text(filename):
-
     reader = TextReader(filename)
     return reader
 
@@ -84,10 +97,10 @@ def read_csv(filename):
 
 def write(files, outfile, outfiletype):
     """
-    :param filename: name of file
-    :param ftype: the type of the file ('xlsx', 'txt', etc)
-    :param sheetname: name of the sheet being read
-    :return: appropriate file reader
+    :param files: dataframe with all the files and their metadata
+    :param outfile: output file to write to
+    :param outfiletype: type of file
+    :return: appropriate reader for writing
     """
     if outfiletype is None:
         outfiletype = guess_file_type(outfile)
@@ -111,23 +124,23 @@ def write_excel(files, outfile):
     """
     writer = ExcelWriter(outfile)
     for sheet in files['sheetname']:
-        writer.write(merge(files[files['sheetname'] == sheet]['filename'], files[files['sheetname'] == sheet]['dataframe'], sheet), sheet)
+        writer.write(merge_dataframes(files[files['sheetname'] == sheet]['filename'], files[files['sheetname'] == sheet]['dataframe'], sheet), sheet)
     writer.save_and_close()
 
 
 def write_text(files, outfile):
     writer = TextWriter(outfile)
-    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
 
 
 def write_json(files, outfile):
     writer = JSONWriter(outfile)
-    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
 
 
 def write_csv(files, outfile):
     writer = CSVWriter(outfile)
-    writer.write(merge(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
 
 
 def join_two_dataframes(lhs, rhs):
@@ -144,7 +157,7 @@ def join_many_dataframes(dataframes):
     :param dfs: list of the dataframes
     :return: concatenated dataframe
     """
-    combined = pd.DataFrame()
+    combined = create_empty_df()
     for df in dataframes:
         combined = pd.concat([combined, df], sort=False, ignore_index=True)
     return combined
@@ -158,7 +171,7 @@ def guess_file_type(filename):
     return os.path.splitext(filename)[1].strip('.')
 
 
-def check_for_merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Name'):
+def check_for_merge_conflict(left, right, lhs, rhs, sheetname):
     """
     :param left: left dataframe
     :param right: right dataframe
@@ -169,11 +182,11 @@ def check_for_merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Na
     :return: A version of the big dataframe that is free of merge conflicts
     """
     df = join_two_dataframes(left, right)
-    duplicates = (list(df[column][df[[column]].duplicated(keep='last')].drop_duplicates()))
+    duplicates = (list(df[df.columns[0]][df[[df.columns[0]]].duplicated(keep='last')].drop_duplicates()))
     # Creates a list of all the duplicate sample names found, regardless of if they will eventually
     # cause a merge conflict
     for name in duplicates:
-        temp = df[df[column] == name]
+        temp = df[df[df.columns[0]] == name]
         # creates a temporary dataframe of all the rows with duplicate sample names
         for key in temp:
             # This for loop iterates through each of the columns in the temporary dataframe to check how many
@@ -181,16 +194,16 @@ def check_for_merge_conflict(left, right, lhs, rhs, sheetname, column='Sample Na
             # function.
             instances = temp[key].nunique()
             if instances > 1:
-                choice = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[column].values[0], sheetname)
-                right.at[right[column] == name, key] = choice
-                left.at[left[column] == name, key] = choice
+                choice = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[df.columns[0]].values[0], sheetname)
+                right.at[right[df.columns[0]] == name, key] = choice
+                left.at[left[df.columns[0]] == name, key] = choice
                 # The above if statement checks if there is more than one unique value per column. If the global default
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
     return [fix_dataframe(left), fix_dataframe(right)]
 
 
-def check_for_sample_name_completeness(df, filename, sheetname='Sheet1', column='Sample Name'):
+def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
     """
     :param df: dataframe to check
     :param filename: name of the file
@@ -200,14 +213,14 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1', column=
     """
     #try:
     for i in range(len(df)):
-        if pd.isna(list(df[column])[i]) is True:
+        if pd.isna(list(df[df.columns[0]])[i]) is True:
             raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
     return df
     #except IOError:
-        #IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+    #    IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
 
 
-def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1', column='Sample Name'):
+def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     """
     Functionality: Makes sure there are no repeated sample names, similar to the 'merge_conflict' function
     :param df: dataframe to check
@@ -216,13 +229,13 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1', column='S
     :param column: column that is being checked
     :return: fixed dataframe
     """
-    duplicates = (list(df[column][df[[column]].duplicated(keep='last')].drop_duplicates()))
+    duplicates = (list(df[df.columns[0]][df[[df.columns[0]]].duplicated(keep='last')].drop_duplicates()))
     for name in duplicates:
-        temp = df[df[column] == name]
+        temp = df[df[df.columns[0]] == name]
         for key in temp:
             instances = temp[key].nunique()
             if instances > 1:
-                df.loc[df[column] == name, key] = make_user_choose_one_file(temp[key].values, key, filename, sheetname, temp[column].values[0])
+                df.loc[df[df.columns[0]] == name, key] = make_user_choose_one_file(temp[key].values, key, filename, sheetname, temp[df.columns[0]].values[0])
     return fix_dataframe(df)
 
 
@@ -299,23 +312,23 @@ def combiner(df):
     :param df: dataframe being combined
     :return: corrected dataframe
     """
-    df_valid = df.groupby(by='Sample Name').agg(dict.fromkeys(df.columns[0:], check_if_nan))
+    df_valid = df.groupby(by=df.columns[0]).agg(dict.fromkeys(df.columns[0:], check_if_nan))
     return df_valid
 
 
-def fix_dataframe(df, column='Sample Name'):
+def fix_dataframe(df):
     """
     Function: Takes a dataframe with several identical sample name entries and corrects it. A previous
     function has already made sure there will not be a merge conflict.
     :param df: dataframe to be fixed
     :return: dataframe without diplicated sample name entries
     """
-    combined = pd.DataFrame()
-    duplicates = (list(df[column][df[[column]].duplicated(keep='last')].drop_duplicates()))
+    combined = create_empty_df()
+    duplicates = (list(df[df.columns[0]][df[[df.columns[0]]].duplicated(keep='last')].drop_duplicates()))
     for name in duplicates:
-        temp = df[df[column] == name]
+        temp = df[df[df.columns[0]] == name]
         combined = pd.concat([combined, combiner(temp)])
-    df = df.drop_duplicates(subset=[column], keep=False)
+    df = df.drop_duplicates(subset=[df.columns[0]], keep=False)
     return join_two_dataframes(df, combined)
 
 
@@ -369,27 +382,47 @@ def get_file(fname, ftype):
     return os.path.join(os.path.splitext(fname)[0] + "." + ftype.strip('.'))
 
 
+def create_df_of_all_infiles(infiles):
+    files = create_empty_df()
+    for file in infiles:
+        # for each file in the list of files, a new row is added to the dataframe containing all the
+        # information in the file. The end result is a dataframe containing all the names, types, corresponding
+        # dataframes, and sheetnames of all the input files.
+        files = join_two_dataframes(files, create_file_df(file, infiles[file]))
+    return files
+
+
+def setup_validator():
+    validate = QMDataFrameValidator()
+    validate.add_callback(check_for_sample_name_completeness)
+    validate.add_callback(check_for_sample_name_uniqueness)
+    return validate
+
+
+def create_empty_df(header=None):
+    return pd.DataFrame(columns=header)
+
+
+def add_row_to_file_df(df, filename, file_dataframe, ftype, sheetname):
+    return df.append({'filename': filename,
+                      'dataframe': file_dataframe,
+                      'type': ftype,
+                      'sheetname': sheetname
+                      }, ignore_index=True)
+
+
 def create_file_df(filename, ftype):
     """
     :param filename: name of the file being passed to the function
     :param ftype: type fo the file
     :return: dataframe containing name, dataframe, type, and any sheetnames of the file
     """
-    validate = QMDataFrameValidator()
-    validate.add_callback(check_for_sample_name_completeness)
-    validate.add_callback(check_for_sample_name_uniqueness)
-    df = pd.DataFrame(columns=['filename', 'dataframe', 'type', 'sheetname'])
-    if ftype == 'xlsx':
-        sheets = get_all_sheetnames([filename])
-    else:
-        sheets = [txtSheetname]
+    validate = setup_validator()
+    df = create_empty_df(['filename', 'dataframe', 'type', 'sheetname'])
+    sheets = get_all_sheetnames([filename]) if ftype == 'xlsx' else [txtSheetname]
     for sheetname in sheets:
-        df = df.append({'filename': filename,
-                        'dataframe': validate(read(filename, ftype, sheetname).as_dataframe(), filename, sheetname),
-                        'type': ftype,
-                        'sheetname': sheetname
-                        }, ignore_index=True)
-    #df.set_index('filename', inplace=True)
+        file_dataframe = validate(read(filename, ftype, sheetname).as_dataframe(), filename, sheetname)
+        df = add_row_to_file_df(df, filename, file_dataframe, ftype, sheetname)
     return df
 
 
@@ -421,27 +454,30 @@ def parse_args():
     return parser.parse_args()
 
 
+def set_default_variables(args):
+    global default
+    global txtSheetname
+    default = find_default_action(args)
+    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
+
+
+def get_dict_of_all_filenames_and_types(args):
+    infiles = {infile: guess_file_type(infile) for infile in args.infiles} if args.infiles else {}
+    if args.input is not None:
+        infiles.update({get_file(infile[1], infile[0]): infile[0] for infile in args.input})
+    return infiles
+
+
 def run():
     """
     function: takes arguments from arg parse and puts the files into an excel parser
     :return:
     """
-    global default
-    global txtSheetname
-    files = pd.DataFrame()
     args = parse_args()
-    infiles = {infile: guess_file_type(infile) for infile in args.infiles} if args.infiles else {}
-    default = find_default_action(args)
-    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
-    if args.input is not None:
-        infiles.update({get_file(infile[1], infile[0]): infile[0] for infile in args.input})
-    for file in infiles:
-        # for each file in the list of files, a new row is added to the dataframe containing all the
-        # information in the file. The end result is a dataframe containing all the names, types, corresponding
-        # dataframes, and sheetnames of all the input files.
-        files = join_two_dataframes(files, create_file_df(file, infiles[file]))
-    write(files, outfile=get_file(args.output, args.outputformat), outfiletype=args.outputformat)
-
+    set_default_variables(args)
+    infiles = get_dict_of_all_filenames_and_types(args)
+    files = create_df_of_all_infiles(infiles)
+    write(files, get_file(args.output, args.outputformat), args.outputformat)
 
 if __name__ == "__main__":
     run()
