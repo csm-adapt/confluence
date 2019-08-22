@@ -1,4 +1,4 @@
-from confluence.io.base import BaseReader
+# from confluence.io.base import BaseReader
 import pandas as pd
 
 class ExcelReader():
@@ -43,6 +43,7 @@ class ExcelWriter():
         self.set_filename(fname)
         self.sheetname = sheetname
         self.writer = pd.ExcelWriter(fname, engine='xlsxwriter')
+        # self.writer = pd.ExcelWriter(fname)
 
     def set_filename(self, fname):
         self._filename = fname

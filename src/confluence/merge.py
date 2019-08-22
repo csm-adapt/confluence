@@ -1,11 +1,11 @@
+import os
 import argparse
 import pandas as pd
 import numpy as np
-import os
-from excel import ExcelReader
-from excel import ExcelWriter
 from itertools import product
-from validator import QMDataFrameValidator
+from .excel import ExcelReader
+from .excel import ExcelWriter
+from .validator import QMDataFrameValidator
 
 
 def merge(dataframes, sheetname):
