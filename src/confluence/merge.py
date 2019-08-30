@@ -21,9 +21,10 @@ def merge(*args):
     global default
     txtSheetname = 'Sheet1'
     default = 'first'
-    infiles = {file: None for file in args}
+    infiles = {get_file(file, None): None for file in args}
     files = create_df_of_all_infiles(infiles)
-    return merge_dataframes(files['filename'], files['dataframe'], 'Sheet1')
+    merged = merge_dataframes(files['filename'], files['dataframe'], 'Sheet1')
+    return merged
 
 
 def merge_dataframes(fnames, dfs, sheetname):
@@ -49,7 +50,7 @@ def merge_dataframes(fnames, dfs, sheetname):
     return df.sort_values([df.columns[0]]).reset_index(drop=True)
 
 
-def read(filename, ftype, sheetname):
+def read(filename, ftype=None, sheetname='Sheet1'):
     """
     :param filename: name of file
     :param ftype: the type of the file ('xlsx', 'txt', etc)
@@ -192,14 +193,19 @@ def check_for_merge_conflict(left, right, lhs, rhs, sheetname):
             # This for loop iterates through each of the columns in the temporary dataframe to check how many
             # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
             # function.
-            instances = temp[key].nunique()
-            if instances > 1:
-                choice = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[df.columns[0]].values[0], sheetname)
-                right.at[right[df.columns[0]] == name, key] = choice
-                left.at[left[df.columns[0]] == name, key] = choice
+            try:
+
+                instances = temp[key].nunique()
+                if instances > 1:
+                    raise(OSError)
                 # The above if statement checks if there is more than one unique value per column. If the global default
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
+            except(OSError):
+                choice = make_user_choose_two_files(temp[key].values, lhs, rhs, key, temp[df.columns[0]].values[0],
+                                                    sheetname)
+                right.at[right[df.columns[0]] == name, key] = choice
+                left.at[left[df.columns[0]] == name, key] = choice
     return [fix_dataframe(left), fix_dataframe(right)]
 
 
@@ -211,13 +217,13 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
     :param column: name of the column that you are checking
     :return: dataframe with all entries in the 'column' filled. If there is an empty one, an error is thrown.
     """
-    #try:
-    for i in range(len(df)):
-        if pd.isna(list(df[df.columns[0]])[i]) is True:
-            raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
-    return df
-    #except IOError:
-    #    IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+    try:
+        for i in range(len(df)):
+            if pd.isna(list(df[df.columns[0]])[i]) is True:
+                raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+        return df
+    except IOError:
+        IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
 
 
 def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
@@ -239,8 +245,6 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     return fix_dataframe(df)
 
 
-def check_files_are_represented_in_dataframe(self):
-    pass
 
 
 def make_user_choose_one_file(arr, column, filename='None', sheetname='Sheet1', sample='None'):
@@ -437,7 +441,7 @@ def find_default_action(args):
     return default
 
 
-def parse_args():
+def parse_args(args):
     """
     function: return a parser with all the args the user passes to the function
     :return: parser containing all the args
@@ -451,7 +455,7 @@ def parse_args():
     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
     parser.add_argument('--outputformat', help='specify output format')
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def set_default_variables(args):
@@ -473,7 +477,7 @@ def run():
     function: takes arguments from arg parse and puts the files into an excel parser
     :return:
     """
-    args = parse_args()
+    args = parse_args(sys.argv[1:])
     set_default_variables(args)
     infiles = get_dict_of_all_filenames_and_types(args)
     files = create_df_of_all_infiles(infiles)

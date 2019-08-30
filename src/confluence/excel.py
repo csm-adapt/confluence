@@ -1,6 +1,5 @@
 import pandas as pd
 from confluence.base import BaseReader
-import os
 
 class ExcelReader(BaseReader):
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
@@ -16,7 +15,6 @@ class ExcelReader(BaseReader):
     def get_filename(self):
         return self._filename
 
-
     def as_dataframe(self, *args, **kwds):
         """
         Reads the requested sheetname (if specified) from the Excel file.
@@ -28,8 +26,7 @@ class ExcelReader(BaseReader):
         """
         #args = (self.get_filename() + args)
         args = self.get_filename()
-        #print(sheetname)
-        return pd.read_excel(args, sheet_name=self.sheetname).dropna(how='all').dropna(how='all', axis='columns') #**kwds,
+        return pd.read_excel(args, sheet_name=self.sheetname).dropna(how='all').dropna(how='all', axis='columns')
 
     def sheetnames(self):
         df = pd.ExcelFile(self.get_filename())
