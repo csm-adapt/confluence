@@ -1,9 +1,9 @@
+# from confluence.io.base import BaseReader
 import pandas as pd
-from confluence.base import BaseReader
 
-class ExcelReader(BaseReader):
+class ExcelReader():
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
-        super().__init__()
+        #super().__init__(self)
         self._filename = None
         self.set_filename(fname)
         self.sheetname = sheetname
@@ -33,13 +33,14 @@ class ExcelReader(BaseReader):
         return list(df.sheet_names)
 
 
-class ExcelWriter(BaseReader):
+class ExcelWriter():
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
-        super().__init__()
+        #super().__init__(self)
         self._filename = None
         self.set_filename(fname)
         self.sheetname = sheetname
-        self.writer = pd.ExcelWriter(self.get_filename(), engine='xlsxwriter')
+        self.writer = pd.ExcelWriter(fname, engine='xlsxwriter')
+        # self.writer = pd.ExcelWriter(fname)
 
     def set_filename(self, fname):
         self._filename = fname

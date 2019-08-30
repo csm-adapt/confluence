@@ -1,19 +1,34 @@
+import os
 import sys
-sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
 import argparse
 import pandas as pd
 import numpy as np
-import os
-from confluence.excel import ExcelReader
-from confluence.excel import ExcelWriter
-from confluence.text import TextReader
-from confluence.text import TextWriter
-from confluence.JSON import JSONReader
-from confluence.JSON import JSONWriter
-from confluence.CSV import CSVReader
-from confluence.CSV import CSVWriter
 from itertools import product
-from confluence.validator import QMDataFrameValidator  # imports the validator
+from .excel import ExcelReader
+from .excel import ExcelWriter
+from .text import TextWriter
+from .text import TextReader
+from .JSON import JSONWriter
+from .JSON import JSONReader
+from .CSV import CSVReader
+from .CSV import CSVWriter
+from .validator import QMDataFrameValidator
+# import sys
+# sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
+# import argparse
+# import pandas as pd
+# import numpy as np
+# import os
+# from confluence.excel import ExcelReader
+# from confluence.excel import ExcelWriter
+# from confluence.text import TextReader
+# from confluence.text import TextWriter
+# from confluence.JSON import JSONReader
+# from confluence.JSON import JSONWriter
+# from confluence.CSV import CSVReader
+# from confluence.CSV import CSVWriter
+# from itertools import product
+# from confluence.validator import QMDataFrameValidator  # imports the validator
 
 
 def merge(*args):
