@@ -1,34 +1,36 @@
-import os
-import sys
-import argparse
-import pandas as pd
-import numpy as np
-from itertools import product
-from .excel import ExcelReader
-from .excel import ExcelWriter
-from .text import TextWriter
-from .text import TextReader
-from .JSON import JSONWriter
-from .JSON import JSONReader
-from .CSV import CSVReader
-from .CSV import CSVWriter
-from .validator import QMDataFrameValidator
+
+# import os
 # import sys
-# sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
 # import argparse
 # import pandas as pd
 # import numpy as np
-# import os
-# from confluence.excel import ExcelReader
-# from confluence.excel import ExcelWriter
-# from confluence.text import TextReader
-# from confluence.text import TextWriter
-# from confluence.JSON import JSONReader
-# from confluence.JSON import JSONWriter
-# from confluence.CSV import CSVReader
-# from confluence.CSV import CSVWriter
 # from itertools import product
-# from confluence.validator import QMDataFrameValidator  # imports the validator
+# from .excel import ExcelReader
+# from .excel import ExcelWriter
+# from .text import TextWriter
+# from .text import TextReader
+# from .JSON import JSONWriter
+# from .JSON import JSONReader
+# from .CSV import CSVReader
+# from .CSV import CSVWriter
+# from .validator import QMDataFrameValidator
+
+import sys
+sys.path.insert(0, r'C:/Users/connorweddle/Research/confluence/src')
+import argparse
+import pandas as pd
+import numpy as np
+import os
+from confluence.excel import ExcelReader
+from confluence.excel import ExcelWriter
+from confluence.text import TextReader
+from confluence.text import TextWriter
+from confluence.JSON import JSONReader
+from confluence.JSON import JSONWriter
+from confluence.CSV import CSVReader
+from confluence.CSV import CSVWriter
+from itertools import product
+from confluence.validator import QMDataFrameValidator  # imports the validator
 
 
 def merge(*args):
@@ -82,7 +84,7 @@ def read(filename, ftype=None, sheetname='Sheet1'):
             'json': read_json(filename)
         }[ftype]
     except KeyError:
-        raise IOError(f"{ftype} is not a recognized file type.")
+        raise IOError("{ftype} is not a recognized file type.")
 
 
 def read_excel(filename, sheetname):
@@ -128,7 +130,7 @@ def write(files, outfile, outfiletype):
             'json': write_json
         }[outfiletype](files, outfile)
     except KeyError:
-        raise IOError(f"{outfiletype} is not a recognized file type.")
+        raise IOError("{outfiletype} is not a recognized file type.")
 
 
 def write_excel(files, outfile):
@@ -235,10 +237,10 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
     try:
         for i in range(len(df)):
             if pd.isna(list(df[df.columns[0]])[i]) is True:
-                raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+                raise IOError("Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
         return df
     except IOError:
-        IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
+        IOError("Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
 
 
 def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
