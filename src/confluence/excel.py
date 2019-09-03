@@ -40,7 +40,6 @@ class ExcelWriter():
         self.set_filename(fname)
         self.sheetname = sheetname
         self.writer = pd.ExcelWriter(fname, engine='xlsxwriter')
-        # self.writer = pd.ExcelWriter(fname)
 
     def set_filename(self, fname):
         self._filename = fname

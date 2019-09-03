@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import sys
 sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
-from confluence.merge import merge, write, create_file_df, read, check_for_merge_conflict
+from confluence.merge import merge, write, file_df_row, read, check_for_merge_conflict, run
 
 __author__ = "amikulichmines"
 __copyright__ = "amikulichmines"
@@ -47,13 +47,13 @@ def test_merge_with_extra_columns(expected_dataframe_with_extra_column):
 
 
 def test_merge_with_conflict(expected_dataframe):
-    actual = merge('merge_conflict1.xlsx', 'merge_conflict2.xlsx')
+    actual = merge('merge_conflict1.xlsx', 'merge_conflict2.xlsx', '-m', 'first')
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_column_and_conflict(expected_dataframe_with_extra_column):
-    actual = merge('extra_columns1.xlsx', 'merge_conflict2.xlsx')
+    actual = merge('extra_columns1.xlsx', 'merge_conflict2.xlsx', '-m', 'first')
     expected = expected_dataframe_with_extra_column
     assert actual.equals(expected)
 
@@ -67,16 +67,8 @@ def test_merge_with_four_filetypes(expected_dataframe):
     assert actual.equals(expected)
 
 
-# def test_parser():
-#     #parser = parse_args(['-l', '-m'])
-#     # print(parser.long)
-#     # assert(parser.long)
-#     parser = parse_args(['--something', 'test'])
-#     assert(parser.something, 'test')
-
-
 def test_write():
-    df = create_file_df('complete_excel.xlsx', 'xlsx')
+    df = file_df_row('complete_excel.xlsx', 'xlsx')
     write(df, 'complete_excel.xlsx', 'xlsx')
     write(df, 'test_CSV_file.csv', 'csv')
     write(df, 'test_JSON_file.json', None)
@@ -85,10 +77,14 @@ def test_write():
 
 def test_fails():
     with pytest.raises(OSError):
-        write(create_file_df('simple1.xlsx', 'xlsx'), 'Newfile.xlsx', 'pdf')
+        write(file_df_row('simple1.xlsx', 'xlsx'), 'Newfile.xlsx', 'pdf')
     with pytest.raises(OSError):
         read('simple1.txt', ftype='pdf')
-    with pytest.raises(OSError):
-        check_for_merge_conflict(read('merge_conflict1'),
-                                 read('merge_confice2'),
+    with pytest.raises(ValueError):
+        check_for_merge_conflict(read('merge_conflict1.xlsx').as_dataframe(),
+                                 read('merge_conflict2.xlsx').as_dataframe(),
                                  None, None, None)
+
+
+def test_run():
+    run('complete_excel.xlsx', '-o', 'Newfile.xlsx')
