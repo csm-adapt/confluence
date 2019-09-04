@@ -12,6 +12,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir+r'\src')
 from confluence.merge import merge, write, file_df_row, read, check_for_merge_conflict, run
 
+
 __author__ = "amikulichmines"
 __copyright__ = "amikulichmines"
 __license__ = "mit"
@@ -33,65 +34,65 @@ def expected_dataframe_with_extra_column():
 
 
 def test_simple_merge(expected_dataframe):
-    actual = merge('simple1.xlsx', 'simple2.xlsx')
+    actual = merge(r'test_files\simple1.xlsx', r'test_files\simple2.xlsx')
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_rows(expected_dataframe):
-    actual = merge('extra_rows1.xlsx', 'extra_rows2.xlsx')
+    actual = merge(r'test_files\extra_rows1.xlsx', r'test_files\extra_rows2.xlsx')
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_columns(expected_dataframe_with_extra_column):
-    actual = merge('extra_columns1.xlsx', 'extra_columns2.xlsx')
+    actual = merge(r'test_files\extra_columns1.xlsx', r'test_files\extra_columns2.xlsx')
     expected = expected_dataframe_with_extra_column
     assert actual.equals(expected)
 
 
 def test_merge_with_conflict(expected_dataframe):
-    actual = merge('merge_conflict1.xlsx', 'merge_conflict2.xlsx', '-m', 'first')
+    actual = merge(r'test_files\merge_conflict1.xlsx', r'test_files\merge_conflict2.xlsx', '-m', 'first')
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_column_and_conflict(expected_dataframe_with_extra_column):
-    actual = merge('extra_columns1.xlsx', 'merge_conflict2.xlsx', '-m', 'first')
+    actual = merge(r'test_files\extra_columns1.xlsx', r'test_files\merge_conflict2.xlsx', '-m', 'first')
     expected = expected_dataframe_with_extra_column
     assert actual.equals(expected)
 
 
 def test_merge_with_four_filetypes(expected_dataframe):
-    actual = merge('complete_excel.xlsx',
-                   'test_CSV_file.csv',
-                   'test_JSON_file.json',
-                   'test_txt_file.txt')
+    actual = merge(r'test_files\complete_excel.xlsx',
+                   r'test_files\test_CSV_file.csv',
+                   r'test_files\test_JSON_file.json',
+                   r'test_files\test_txt_file.txt')
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_write():
-    df = file_df_row('complete_excel.xlsx', 'xlsx')
-    write(df, 'complete_excel.xlsx', 'xlsx')
-    write(df, 'test_CSV_file.csv', 'csv')
-    write(df, 'test_JSON_file.json', None)
-    write(df, 'test_txt_file.txt', 'txt')
+    df = file_df_row(r'test_files\complete_excel.xlsx', 'xlsx')
+    write(df, r'test_files\complete_excel.xlsx', 'xlsx')
+    write(df, r'test_files\test_CSV_file.csv', 'csv')
+    write(df, r'test_files\test_JSON_file.json', None)
+    write(df, r'test_files\test_txt_file.txt', 'txt')
 
 
 def test_fails():
     with pytest.raises(OSError):
-        write(file_df_row('simple1.xlsx', 'xlsx'), 'Newfile.xlsx', 'pdf')
+        write(file_df_row(r'test_files\simple1.xlsx', 'xlsx'), r'test_files\Newfile.xlsx', 'pdf')
     with pytest.raises(OSError):
-        read('simple1.txt', ftype='pdf')
+        read(r'test_files\simple1.txt', ftype='pdf')
     with pytest.raises(ValueError):
-        check_for_merge_conflict(read('merge_conflict1.xlsx').as_dataframe(),
-                                 read('merge_conflict2.xlsx').as_dataframe(),
+        check_for_merge_conflict(read(r'test_files\merge_conflict1.xlsx').as_dataframe(),
+                                 read(r'test_files\merge_conflict2.xlsx').as_dataframe(),
                                  None, None, None)
 
 
 def test_run():
-    run(['complete_excel.xlsx', '-o', 'Newfile.xlsx'])
+    run([r'test_files\complete_excel.xlsx', '-o', r'test_files\Newfile.xlsx'])
 
 
-merge('complete_excel.xlsx')
+#merge('complete_excel.xlsx')

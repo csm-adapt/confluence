@@ -1,40 +1,40 @@
-import os
-import sys
-import argparse
-import pandas as pd
-import numpy as np
-from itertools import product
-from excel import ExcelReader
-from excel import ExcelWriter
-from text import TextWriter
-from text import TextReader
-from JSON import JSONWriter
-from JSON import JSONReader
-from CSV import CSVReader
-from CSV import CSVWriter
-from validator import QMDataFrameValidator
-
-#
+# import os
 # import sys
 # import argparse
 # import pandas as pd
 # import numpy as np
-# import os
-# import inspect
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, parentdir+r'\src')
-# from confluence.excel import ExcelReader
-# from confluence.excel import ExcelWriter
-# from confluence.text import TextReader
-# from confluence.text import TextWriter
-# from confluence.JSON import JSONReader
-# from confluence.JSON import JSONWriter
-# from confluence.CSV import CSVReader
-# from confluence.CSV import CSVWriter
 # from itertools import product
-# from confluence.validator import QMDataFrameValidator  # imports the validator
-#
+# from excel import ExcelReader
+# from excel import ExcelWriter
+# from text import TextWriter
+# from text import TextReader
+# from JSON import JSONWriter
+# from JSON import JSONReader
+# from CSV import CSVReader
+# from CSV import CSVWriter
+# from validator import QMDataFrameValidator
+
+
+import sys
+import argparse
+import pandas as pd
+import numpy as np
+import os
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir+r'\src')
+from confluence.excel import ExcelReader
+from confluence.excel import ExcelWriter
+from confluence.text import TextReader
+from confluence.text import TextWriter
+from confluence.JSON import JSONReader
+from confluence.JSON import JSONWriter
+from confluence.CSV import CSVReader
+from confluence.CSV import CSVWriter
+from itertools import product
+from confluence.validator import QMDataFrameValidator  # imports the validator
+
 
 
 def run(args):
