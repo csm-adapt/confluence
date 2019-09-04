@@ -4,8 +4,12 @@
 import pytest
 import pandas as pd
 import numpy as np
+import os
 import sys
-sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir+r'\src')
 from confluence.merge import merge, write, file_df_row, read, check_for_merge_conflict, run
 
 __author__ = "amikulichmines"
@@ -88,3 +92,6 @@ def test_fails():
 
 def test_run():
     run('complete_excel.xlsx', '-o', 'Newfile.xlsx')
+
+
+merge('complete_excel.xlsx')

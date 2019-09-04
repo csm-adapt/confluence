@@ -16,11 +16,14 @@
 
 
 import sys
-sys.path.insert(0, r'C:\Users\Alex\Documents\workspace\confluence\src')
 import argparse
 import pandas as pd
 import numpy as np
 import os
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir+r'\src')
 from confluence.excel import ExcelReader
 from confluence.excel import ExcelWriter
 from confluence.text import TextReader
@@ -31,6 +34,7 @@ from confluence.CSV import CSVReader
 from confluence.CSV import CSVWriter
 from itertools import product
 from confluence.validator import QMDataFrameValidator  # imports the validator
+
 
 
 def run(*args):
@@ -332,7 +336,7 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
     """
     #try:
     for i in range(len(df)):
-        print(list(df[df.columns[0]])[i])
+        # print(list(df[df.columns[0]])[i])
         if pd.isna(list(df[df.columns[0]])[i]) is True:
             raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
     return df
