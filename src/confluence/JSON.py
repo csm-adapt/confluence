@@ -1,11 +1,9 @@
 import pandas as pd
 import json
-from confluence.base import BaseReader
 
 
-class JSONReader(BaseReader):
+class JSONReader():
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter
@@ -36,9 +34,8 @@ class JSONReader(BaseReader):
         return df
 
 
-class JSONWriter(BaseReader):
+class JSONWriter():
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter

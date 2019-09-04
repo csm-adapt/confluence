@@ -91,7 +91,7 @@ def test_fails():
 
 
 def test_run():
-    run('complete_excel.xlsx', '-o', 'Newfile.xlsx')
+    run(['complete_excel.xlsx', '-o', 'Newfile.xlsx'])
 
 
 merge('complete_excel.xlsx')

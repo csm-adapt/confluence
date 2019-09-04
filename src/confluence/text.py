@@ -1,11 +1,9 @@
 import pandas as pd
 import numpy as np
-from confluence.base import BaseReader
 
 
-class TextReader(BaseReader):
+class TextReader():
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter
@@ -33,9 +31,8 @@ class TextReader(BaseReader):
         return df
 
 
-class TextWriter(BaseReader):
+class TextWriter():
     def __init__(self, fname=None, delimiter=" ", **kwds):
-        super().__init__()
         self._filename = None
         self.set_filename(fname)
         self._delimiter = delimiter

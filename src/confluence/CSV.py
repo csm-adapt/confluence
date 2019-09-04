@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
-from confluence.base import BaseReader
 
 
-class CSVReader(BaseReader):
+class CSVReader():
     def __init__(self, fname=None, delimiter=" ", **kwds):
         super().__init__()
         self._filename = None
@@ -33,7 +32,7 @@ class CSVReader(BaseReader):
         return df
 
 
-class CSVWriter(BaseReader):
+class CSVWriter():
     def __init__(self, fname=None, delimiter=" ", **kwds):
         super().__init__()
         self._filename = None
