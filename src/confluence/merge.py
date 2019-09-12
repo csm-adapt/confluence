@@ -374,15 +374,16 @@ def make_user_choose_between_two_files(arr, file1, file2, column, sample, sheetn
     :return: numerical value that the user chooses
     """
     if default is not None:
-        return switch(convert_merge_default_into_number(default), arr)
+        return take_keyword(convert_merge_default_into_number(default), arr)
     else:
         print('Merge conflict between', file1, 'and', file2, 'in sheet',
               sheetname, 'for sample', sample, 'under column', column, '\n',
               '\n1: Accept value', arr[0], 'from file', file1,
               '\n2: Accept value', arr[1], 'from file', file2,
               '\n3: Join files into a list',
-              '\n4: Abort the merge\n')
-        return switch(int(input('Enter the number\n')), arr)
+              '\n4: Take average (mean)',
+              '\n5: Abort the merge\n')
+        return take_keyword(int(input('Enter the number\n')), arr)
 
 
 def check_if_nan(df):
@@ -436,9 +437,9 @@ def fix_dataframe(df):
     return join_two_dataframes(dfWithoutDuplicates, combined)
 
 
-def switch(input, values):
+def take_keyword(input, values):
     """
-    Function: This takes a number between 1 and 4 and outputs the corresponding value of the array, or aborts the
+    Function: This takes a number between 1 and 5 and outputs the corresponding value of the array, or aborts the
     merge if that is what the user chooses.
     :param argument: keyboard entry from the user
     :param values: list of the possible valuse for the user to chose
@@ -451,7 +452,9 @@ def switch(input, values):
         # value from file 2
         3: str(list(values)),
         # list of both of them
-        4: 'exit',
+        4: (values[0]+values[1])/2,
+        # take average of values
+        5: 'exit',
         # abort merge
     }
     if action.get(input) is 'exit':
@@ -484,7 +487,8 @@ def convert_merge_default_into_number(input):
             'first': 1,
             'second': 2,
             'join': 3,
-            'abort': 4
+            'average': 4,
+            'abort': 5
         }[input]
     except KeyError:
         raise KeyError(f"{input} is not a recognized default action")
