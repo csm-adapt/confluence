@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import pytest
 import pandas as pd
@@ -33,6 +31,14 @@ def expected_dataframe_with_extra_column():
               'baz': [1, 2, np.nan, np.nan]})
 
 
+@pytest.fixture
+def expected_dataframe_with_complex_data():
+    return pd.DataFrame(
+        data={'foo': [1, 2, 3, 4],
+              'bar': [1.83546, -3.415, 941234, 'High'],
+              'baz': ['564/194', '!!@#!', 'Low', np.datetime64('2012-09-12T00:00:00')]})
+
+
 def test_simple_merge(expected_dataframe):
     actual = merge(r'test_files/simple1.xlsx', r'test_files/simple2.xlsx')
     expected = expected_dataframe
@@ -60,6 +66,12 @@ def test_merge_with_conflict(expected_dataframe):
 def test_merge_with_extra_column_and_conflict(expected_dataframe_with_extra_column):
     actual = merge(r'test_files/extra_columns1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first')
     expected = expected_dataframe_with_extra_column
+    assert actual.equals(expected)
+
+
+def test_merge_with_complex_data(expected_dataframe_with_complex_data):
+    actual = merge(r'test_files/complex_data1.xlsx', r'test_files/complex_data2.xlsx', '-m', 'first')
+    expected = expected_dataframe_with_complex_data
     assert actual.equals(expected)
 
 
@@ -93,6 +105,3 @@ def test_fails():
 
 def test_run():
     run([r'test_files/complete_excel.xlsx', '-o', r'test_files/Newfile.xlsx'])
-
-
-#merge('complete_excel.xlsx')
