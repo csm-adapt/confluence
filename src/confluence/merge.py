@@ -28,7 +28,7 @@ def run(args):
     # This function will write the dataframes to the output file.
 
 
-def merge(*args):
+def merge(args, sheetname='Sheet1'):
     """
     Function: This does the same thing as 'run()' but instead of writing the dataframes to a file, it returns the
     dataframe.
@@ -38,8 +38,10 @@ def merge(*args):
     args = parse_args(args)
     set_global_variables(args)
     files = create_df_of_all_infiles(args)
-    merged = merge_dataframes(files['filename'], files['dataframe'], 'Sheet1')
+    files = files[files['sheetname'] == sheetname]
+    merged = merge_dataframes(files['filename'], files['dataframe'], sheetname)
     return merged
+
 
 
 def merge_dataframes(fnames, dfs, sheetname):

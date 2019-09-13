@@ -1,4 +1,3 @@
-
 import pytest
 import pandas as pd
 import numpy as np
@@ -40,46 +39,46 @@ def expected_dataframe_with_complex_data():
 
 
 def test_simple_merge(expected_dataframe):
-    actual = merge(r'test_files/simple1.xlsx', r'test_files/simple2.xlsx')
+    actual = merge([r'test_files/simple1.xlsx', r'test_files/simple2.xlsx'])
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_rows(expected_dataframe):
-    actual = merge(r'test_files/extra_rows1.xlsx', r'test_files/extra_rows2.xlsx')
+    actual = merge([r'test_files/extra_rows1.xlsx', r'test_files/extra_rows2.xlsx'])
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_columns(expected_dataframe_with_extra_column):
-    actual = merge(r'test_files/extra_columns1.xlsx', r'test_files/extra_columns2.xlsx')
+    actual = merge([r'test_files/extra_columns1.xlsx', r'test_files/extra_columns2.xlsx'])
     expected = expected_dataframe_with_extra_column
     assert actual.equals(expected)
 
 
 def test_merge_with_conflict(expected_dataframe):
-    actual = merge(r'test_files/merge_conflict1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first')
+    actual = merge([r'test_files/merge_conflict1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first'])
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_column_and_conflict(expected_dataframe_with_extra_column):
-    actual = merge(r'test_files/extra_columns1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first')
+    actual = merge([r'test_files/extra_columns1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first'])
     expected = expected_dataframe_with_extra_column
     assert actual.equals(expected)
 
 
 def test_merge_with_complex_data(expected_dataframe_with_complex_data):
-    actual = merge(r'test_files/complex_data1.xlsx', r'test_files/complex_data2.xlsx', '-m', 'first')
+    actual = merge([r'test_files/complex_data1.xlsx', r'test_files/complex_data2.xlsx', '-m', 'first'])
     expected = expected_dataframe_with_complex_data
     assert actual.equals(expected)
 
 
 def test_merge_with_four_filetypes(expected_dataframe):
-    actual = merge(r'test_files/complete_excel.xlsx',
+    actual = merge([r'test_files/complete_excel.xlsx',
                    r'test_files/test_CSV_file.csv',
                    r'test_files/test_JSON_file.json',
-                   r'test_files/test_txt_file.txt')
+                   r'test_files/test_txt_file.txt'])
     expected = expected_dataframe
     assert actual.equals(expected)
 
@@ -101,6 +100,14 @@ def test_fails():
         check_for_merge_conflict(read(r'test_files/merge_conflict1.xlsx').as_dataframe(),
                                  read(r'test_files/merge_conflict2.xlsx').as_dataframe(),
                                  None, None, None)
+
+def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_column):
+    sheet1 = merge([r'test_files/multiple_sheets1.xlsx', r'test_files/multiple_sheets2.xlsx'], 'Foo')
+    sheet2 = merge([r'test_files/multiple_sheets1.xlsx', r'test_files/multiple_sheets2.xlsx'], 'Bar')
+    expectedSheet1 = expected_dataframe
+    expectedSheet2 = expected_dataframe_with_extra_column
+    assert sheet1.equals(expectedSheet1)
+    assert sheet2.equals(expectedSheet2)
 
 
 def test_run():
