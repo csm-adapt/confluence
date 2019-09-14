@@ -112,12 +112,12 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
 
 def test_cli():
     commands = [
-        'python3 merge.py simple1.xlsx simple2.xlsx -o newfile.xlsx',
-        'python3 merge.py simple2.xlsx simple3.xlsx -o newfile.xlsx',
-        'python3 merge.py simple3.xlsx simple1.xlsx -o newfile.xlsx',
-        'python3 merge.py complex_data1.xlsx complex_data2.xlsx -o newfile.xlsx',
-        'python3 merge.py complex_data1.xlsx -o newfile.xlsx',
-        'python3 merge.py simple3.xlsx -o newfile.xlsx'
+        'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx -o test_files/newfile.xlsx',
+        'python3 merge.py test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
+        'python3 merge.py test_files/simple3.xlsx test_files/simple1.xlsx -o test_files/newfile.xlsx',
+        'python3 merge.py test_files/complex_data1.xlsx test_files/complex_data2.xlsx -o test_files/newfile.xlsx',
+        'python3 merge.py test_files/complex_data1.xlsx -o test_files/newfile.xlsx',
+        'python3 merge.py test_files/simple3.xlsx -o test_files/newfile.xlsx'
     ]
     for cmd in commands:
         process = subprocess.Popen(cmd, cwd = '../src/confluence', shell=True)
