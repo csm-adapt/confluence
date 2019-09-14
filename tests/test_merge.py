@@ -4,6 +4,7 @@ import numpy as np
 import os
 import sys
 import inspect
+import subprocess
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir+r'/src')
@@ -108,6 +109,21 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
     expectedSheet2 = expected_dataframe_with_extra_column
     assert sheet1.equals(expectedSheet1)
     assert sheet2.equals(expectedSheet2)
+
+def test_cli():
+    commands = [
+        'python3 merge.py simple1.xlsx simple2.xlsx -o newfile.xlsx',
+        'python3 merge.py simple2.xlsx simple3.xlsx -o newfile.xlsx',
+        'python3 merge.py simple3.xlsx simple1.xlsx -o newfile.xlsx',
+        'python3 merge.py complex_data1.xlsx complex_data2.xlsx -o newfile.xlsx',
+        'python3 merge.py complex_data1.xlsx -o newfile.xlsx',
+        'python3 merge.py simple3.xlsx -o newfile.xlsx'
+    ]
+    for cmd in commands:
+        process = subprocess.Popen(cmd, cwd = '../src/confluence', shell=True)
+        process.wait(timeout=None)
+        rval = process.returncode
+        assert rval == 0
 
 
 def test_run():

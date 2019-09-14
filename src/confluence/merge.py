@@ -17,6 +17,7 @@ def run(args):
     # This creates an arg parser object. It contains all the files, file types, and other information
     # passed from the terminal. For example, if you were to print args.infiles, it would give a list of each
     # file name. If no value is passed for the variable, they return 'False'.
+    print(len(args.infiles))
     set_global_variables(args)
     # This sets all the default variables. A user might enter a default action for the program to do in case of a
     # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
