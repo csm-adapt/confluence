@@ -29,7 +29,7 @@ def run(args):
     # This function will write the dataframes to the output file.
 
 
-def merge(args, sheetname='Sheet1'):
+def merge_files(args, sheetname='Sheet1'):
     """
     Function: This does the same thing as 'run()' but instead of writing the dataframes to a file, it returns the
     dataframe.
