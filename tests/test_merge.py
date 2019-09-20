@@ -110,6 +110,10 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
     assert sheet1.equals(expectedSheet1)
     assert sheet2.equals(expectedSheet2)
 
+def test_with_empty_df():
+    actual = merge_files([r'test_files/simple1.xlsx'], 'empty')
+    assert actual.empty
+
 def test_cli():
     commands = [
         'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',

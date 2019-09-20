@@ -1,11 +1,11 @@
 import pandas as pd
 
 class ExcelReader():
-    def __init__(self, fname=None, sheetname='Sheet1', **kwds):
+    def __init__(self, fname=None, sheetname=None, **kwds):
         #super().__init__(self)
         self._filename = None
         self.set_filename(fname)
-        self.sheetname = sheetname
+        self.sheetname = sheetname if sheetname is not None else self.sheetnames()[0]
 
     def set_filename(self, fname):
         self._filename = fname
@@ -67,6 +67,9 @@ class ExcelWriter():
         for col_num, value in enumerate(df.columns.values):
             worksheet.write(0, col_num, value, header_format)
             worksheet.set_column(col_num, col_num, self.get_column_width(df, value))  # set column width
+
+    def write_empty_df(self, df, sheetname):
+        df.to_excel(self.writer, sheet_name=sheetname, index=False, header=False, startrow=0)
 
     def save_and_close(self):
         self.writer.save()

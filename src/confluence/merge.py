@@ -17,7 +17,8 @@ def run(args):
     # This creates an arg parser object. It contains all the files, file types, and other information
     # passed from the terminal. For example, if you were to print args.infiles, it would give a list of each
     # file name. If no value is passed for the variable, they return 'False'.
-    print(len(args.infiles))
+    args = check(args)
+    # This checks the parse_args function
     set_global_variables(args)
     # This sets all the default variables. A user might enter a default action for the program to do in case of a
     # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
@@ -60,8 +61,18 @@ def merge_dataframes(fnames, dfs, sheetname):
     # checks each dataframe pair for merge conflicts. It either fixes them or raises an error.
     df = fix_dataframe(join_many_dataframes(dfs))
     # This combines all of them and gets rid of any repeated row
-    return df.sort_values([df.columns[0]]).reset_index(drop=True)
+    df = sort_values(df)
+    return df
 
+
+def sort_values(df):
+    if df.empty:
+        return df
+    return df.sort_values([get_sample_name_column(df)]).reset_index(drop=True)
+
+
+def get_sample_name_column(df):
+    return df.columns[0]
 
 def compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname):
     """
@@ -86,7 +97,7 @@ def compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname):
     return dfs
 
 
-def read(filename, ftype=None, sheetname='Sheet1'):
+def read(filename, ftype=None, sheetname=None):
     """
     Function: This is the function we call when we want to read an unknown file. It first takes in the file name
     and file type. If the file type is 'None', it guesses the type based on the file extention. Each file type has an
@@ -188,7 +199,10 @@ def write_excel(file_df, outfile):
     for sheet in file_df['sheetname'].drop_duplicates():
         df_same_sheet = file_df[file_df['sheetname'] == sheet]
         merged_df = merge_dataframes(df_same_sheet['filename'], df_same_sheet['dataframe'], sheet)
-        writer.write(merged_df, sheet)
+        if merged_df.empty:
+            writer.write_empty_df(merged_df, sheet)
+        else:
+            writer.write(merged_df, sheet)
     writer.save_and_close()
 
 
@@ -232,7 +246,6 @@ def guess_file_type(filename):
     :param filename: name of the file
     :return: the file handle that presumably tells the type of the file
     """
-    print(filename)
     return os.path.splitext(filename)[1].strip('.')
 
 
@@ -247,12 +260,12 @@ def check_for_merge_conflict(left_df, right_df, left_filename, right_filename, s
     :return: A version of the big dataframe that is free of merge conflicts
     """
     df = join_two_dataframes(left_df, right_df)
-    # duplicates = (list(df[df.columns[0]][df[[df.columns[0]]].duplicated(keep='last')].drop_duplicates()))
+    # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
     duplicates = find_duplicate_sample_names(df)
     # Creates a list of all the duplicate sample names found, regardless of if they will eventually
     # cause a merge conflict
     for name in duplicates:
-        temp = df[df[df.columns[0]] == name]
+        temp = df[df[get_sample_name_column(df)] == name]
         # creates a temporary dataframe of all the rows with duplicate sample names
         for key in temp:
             # This for loop iterates through each of the columns in the temporary dataframe to check how many
@@ -264,14 +277,14 @@ def check_for_merge_conflict(left_df, right_df, left_filename, right_filename, s
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
                 choice = make_user_choose_between_two_files(temp[key].values, left_filename, right_filename, key,
-                                                            temp[df.columns[0]].values[0], sheetname)
-                right_df.at[right_df[df.columns[0]] == name, key] = choice
-                left_df.at[left_df[df.columns[0]] == name, key] = choice
+                                                            temp[get_sample_name_column(df)].values[0], sheetname)
+                right_df.at[right_df[get_sample_name_column(df)] == name, key] = choice
+                left_df.at[left_df[get_sample_name_column(df)] == name, key] = choice
     return [fix_dataframe(left_df), fix_dataframe(right_df)]
 
 
 def find_duplicate_sample_names(df):
-    column = df.columns[0]
+    column = get_sample_name_column(df)
     # Selects the column we want to search
     duplicated_names = df[[column]].duplicated(keep='last')
     # Goes through the column and identifies whether or not each name has been repeated. If we had:
@@ -310,8 +323,7 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
     """
     #try:
     for i in range(len(df)):
-        # print(list(df[df.columns[0]])[i])
-        if pd.isna(list(df[df.columns[0]])[i]) is True:
+        if pd.isna(list(df[get_sample_name_column(df)])[i]) is True:
             raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
     return df
     #except IOError:
@@ -327,14 +339,14 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     :param column: column that is being checked
     :return: fixed dataframe
     """
-    # duplicates = (list(df[df.columns[0]][df[[df.columns[0]]].duplicated(keep='last')].drop_duplicates()))
+    # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
     duplicates = find_duplicate_sample_names(df)
     for name in duplicates:
-        temp = df[df[df.columns[0]] == name]
+        temp = df[df[get_sample_name_column(df)] == name]
         for key in temp:
             instances = temp[key].nunique()
             if instances > 1:
-                df.loc[df[df.columns[0]] == name, key] = make_user_choose_within_one_file(temp[key].values, key, filename, sheetname, temp[df.columns[0]].values[0])
+                df.loc[df[get_sample_name_column(df)] == name, key] = make_user_choose_within_one_file(temp[key].values, key, filename, sheetname, temp[get_sample_name_column(df)].values[0])
     return fix_dataframe(df)
 
 
@@ -411,7 +423,7 @@ def combiner(df):
     :param df: dataframe being combined
     :return: corrected dataframe
     """
-    df_valid = df.groupby(by=df.columns[0]).agg(dict.fromkeys(df.columns[0:], check_if_nan))
+    df_valid = df.groupby(by=get_sample_name_column(df)).agg(dict.fromkeys(df.columns[0:], check_if_nan))
     return df_valid
 
 
@@ -426,16 +438,18 @@ def fix_dataframe(df):
     :param df: dataframe to be fixed
     :return: dataframe without diplicated sample name entries
     """
+    if df.empty:
+        return df
     combined = create_empty_df()
     duplicates = find_duplicate_sample_names(df)
     # creates an array of all the repeated sample names
     for repeatedName in duplicates:
-        temp = df[df[df.columns[0]] == repeatedName]
+        temp = df[df[get_sample_name_column(df)] == repeatedName]
         # creates a temporary dataframe with only the rows with the repeated name
         combined = join_two_dataframes(combined, combiner(temp))
         # There might be several different repeated names. There will be one row for each fixed name, so 'combined'
         # will contain each of these rows. 'Combiner' will be the function that merges the rows.
-    dfWithoutDuplicates = df.drop_duplicates(subset=[df.columns[0]], keep=False)
+    dfWithoutDuplicates = df.drop_duplicates(subset=[get_sample_name_column(df)], keep=False)
     # Deletes all repeated rows from the original dataframe
     return join_two_dataframes(dfWithoutDuplicates, combined)
 
@@ -618,22 +632,28 @@ def file_df_row(filename, ftype):
     :param ftype: type fo the file
     :return: dataframe containing name, dataframe, type, and any sheetnames of the file
     """
-    validate = setup_validator()
     file_df = create_empty_df(['filename', 'dataframe', 'type', 'sheetname'])
     sheets = get_sheetnames(filename) if ftype == 'xlsx' else [txtSheetname]
     # if the file type is xlsx, get all the sheetnames as a list. Otherwise, it sets the sheetname as the txtSheetname
     # variable, which is a global variable set by the user. If the user does not specify a sheetname for non-excel
     # files, it defaults to 'Sheet1'.
     for sheetname in sheets:
-        df = read(filename, ftype, sheetname).as_dataframe()
+        df = get_dataframe(filename, ftype, sheetname)
         # This is where we finally get to read the dataframe for the file. The read() function determines what reader
         # to use, and returns the file as a dataframe.
-        df = validate(df, filename, sheetname)
-        # Look under the setup_validator function, I explain how the validator works.
         file_df = add_row_to_file_df(file_df, filename, df, ftype, sheetname)
     # Some files have multiple sheetnames and will therefore have multiple rows in the file dataframe. This adds a new
     # row for each sheet.
     return file_df
+
+
+def get_dataframe(filename, ftype, sheetname):
+    validate = setup_validator()
+    # Look under the setup_validator function, I explain how the validator works.
+    df = read(filename, ftype, sheetname).as_dataframe()
+    if not df.empty:
+        df = validate(df, filename, sheetname)
+    return df
 
 
 def find_default_action(args):
@@ -692,6 +712,7 @@ if __name__ == "__main__":
     from CSV import CSVReader
     from CSV import CSVWriter
     from validator import QMDataFrameValidator
+    from check_args import check
     run(sys.argv[1:])
 else:
     from .excel import ExcelReader
@@ -703,3 +724,4 @@ else:
     from .CSV import CSVReader
     from .CSV import CSVWriter
     from .validator import QMDataFrameValidator
+    from .check_args import check
