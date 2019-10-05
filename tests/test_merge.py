@@ -8,7 +8,7 @@ import subprocess
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir+r'/src')
-from confluence.merge import merge_files, write, file_df_row, read, check_for_merge_conflict, run
+from confluence.merge import merge_files, write, file_df_row, read, run, check_two_dfs_for_merge_conflict
 
 
 __author__ = "amikulichmines"
@@ -98,9 +98,11 @@ def test_fails():
     with pytest.raises(OSError):
         read(r'test_files/simple1.txt', ftype='pdf')
     with pytest.raises(ValueError):
-        check_for_merge_conflict(read(r'test_files/merge_conflict1.xlsx').as_dataframe(),
-                                 read(r'test_files/merge_conflict2.xlsx').as_dataframe(),
-                                 None, None, None)
+        file1 = read(r'test_files/merge_conflict1.xlsx').as_dataframe()
+        file2 = read(r'test_files/merge_conflict2.xlsx').as_dataframe()
+        file1['Filename'] = ['File1'] * len(file1)
+        file2['Filename'] = ['File2'] * len(file2)
+        check_two_dfs_for_merge_conflict(file1, file2, None)
 
 def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_column):
     sheet1 = merge_files([r'test_files/multiple_sheets1.xlsx', r'test_files/multiple_sheets2.xlsx'], 'Foo')
@@ -110,9 +112,9 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
     assert sheet1.equals(expectedSheet1)
     assert sheet2.equals(expectedSheet2)
 
-def test_with_empty_df():
-    actual = merge_files([r'test_files/simple1.xlsx'], 'empty')
-    assert actual.empty
+# def test_with_empty_df():
+#     actual = merge_files([r'test_files/simple1.xlsx'], 'empty')
+#     assert actual.empty
 
 def test_cli():
     commands = [

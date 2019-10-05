@@ -6,6 +6,7 @@ import numpy as np
 import os
 import inspect
 from itertools import product
+#import check_merge
 
 def run(args):
     """
@@ -23,10 +24,10 @@ def run(args):
     # This sets all the default variables. A user might enter a default action for the program to do in case of a
     # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
     # initialize to 'None' if no default action is specified.
-    files = create_df_of_all_infiles(args)
+    file_df = create_df_of_all_infiles(args)
     # This creates a large dataframe containing the file name, the corresponding dataframe, the file type, and the
     # sheetname. This is the object that will be passed to the write function.
-    write(files, get_file(args.output, args.outputformat), args.outputformat)
+    write(file_df, get_file(args.output, args.outputformat), args.outputformat)
     # This function will write the dataframes to the output file.
 
 
@@ -38,30 +39,67 @@ def merge_files(args, sheetname='Sheet1'):
     :return:
     """
     args = parse_args(args)
-    set_global_variables(args)
-    files = create_df_of_all_infiles(args)
-    files = files[files['sheetname'] == sheetname]
-    merged = merge_dataframes(files['filename'], files['dataframe'], sheetname)
+    file_df = create_df_of_all_infiles(args)
+    file_df = file_df[file_df['sheetname'] == sheetname]
+    merged = merge_dataframes(file_df, sheetname)
     return merged
 
 
+# def merge_dataframes(fnames, dfs, sheetname):
+#     """
+#     function: This takes a bunch of different dataframes and merges them into one. It checks for merge conflicts, fixes
+#     what it can, and returns a single dataframe.
+#     :param fnames: list of all the filenames
+#     :param dfs: all the dataframes
+#     :param sheetname: the sheetname being analyzed
+#     :return: merged dataframe.
+#     """
+#     fnames = list(fnames)
+#     dfs = list(dfs)
+#     dfs = compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname)
+#     # checks each dataframe pair for merge conflicts. It either fixes them or raises an error.
+#     df = fix_dataframe(join_many_dataframes(dfs))
+#     # This combines all of them and gets rid of any repeated row
+#     df = sort_values(df)
+#     return df
 
-def merge_dataframes(fnames, dfs, sheetname):
-    """
-    function: This takes a bunch of different dataframes and merges them into one. It checks for merge conflicts, fixes
-    what it can, and returns a single dataframe.
-    :param fnames: list of all the filenames
-    :param dfs: all the dataframes
-    :param sheetname: the sheetname being analyzed
-    :return: merged dataframe.
-    """
-    fnames = list(fnames)
-    dfs = list(dfs)
-    dfs = compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname)
-    # checks each dataframe pair for merge conflicts. It either fixes them or raises an error.
-    df = fix_dataframe(join_many_dataframes(dfs))
-    # This combines all of them and gets rid of any repeated row
+
+def merge_dataframes(file_df, sheetname):
+    print(read(r'test_files/simple1.xlsx', sheetname='empty').as_dataframe())
+    file_df = file_df[file_df['sheetname'] == sheetname]
+    dfs = add_filename_columns_to_dfs(file_df)
+    print('\n\n\n\n', dfs, '\n\n\n\n\n')
+    df = compare_and_merge_multiple_dfs(dfs, sheetname)
+    df = drop_filename_column_from_df(df)
+    df = fix_dataframe(df)
     df = sort_values(df)
+    return df
+
+
+def compare_and_merge_multiple_dfs(dfs, sheetname):
+    mergedDf = create_empty_df()
+    for df in dfs:
+        mergedDf = check_two_dfs_for_merge_conflict(mergedDf, df, sheetname)
+    return mergedDf
+
+
+def add_filename_columns_to_dfs(file_df):
+    dfs = list(file_df['dataframe'])
+    filenames = list(file_df['filename'])
+    for i in range(len(file_df)):
+        dfs[i] = add_filename_column_to_single_df(dfs[i], filenames[i])
+    return dfs
+
+
+def drop_filename_column_from_df(df):
+    df = df.drop('Filename', axis=1)
+    return df
+
+
+def add_filename_column_to_single_df(df, filename):
+    length = len(df)
+    filenameArray = [filename]*length
+    df['Filename'] = filenameArray
     return df
 
 
@@ -74,27 +112,28 @@ def sort_values(df):
 def get_sample_name_column(df):
     return df.columns[0]
 
-def compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname):
-    """
-    Function: This takes a bunch of dataframes and compares them in pairs of two. If two dataframes are entered,
-    it just makes one comparison. If three are entered, it compares 1 and 2, 1 and 3, and 2 and 3. As more and more
-    dataframes are entered, the amount of comparisons rises pretty quickly. We might get rid of this function and
-    just compare them all at once, but I will keep you posted on that.
 
-    :param fnames: array of file names
-    :param dfs: array of dataframes
-    :param sheetname: name of the sheet being read
-    :return:
-    """
-    for left, right in product(range(len(fnames)), range(len(fnames))):
-        if right <= left:
-            continue
-        left_filename = fnames[left]
-        right_filename = fnames[right]
-        left_df = dfs[left]
-        right_df = dfs[right]
-        dfs[left], dfs[right] = check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname)
-    return dfs
+# def compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname):
+#     """
+#     Function: This takes a bunch of dataframes and compares them in pairs of two. If two dataframes are entered,
+#     it just makes one comparison. If three are entered, it compares 1 and 2, 1 and 3, and 2 and 3. As more and more
+#     dataframes are entered, the amount of comparisons rises pretty quickly. We might get rid of this function and
+#     just compare them all at once, but I will keep you posted on that.
+#
+#     :param fnames: array of file names
+#     :param dfs: array of dataframes
+#     :param sheetname: name of the sheet being read
+#     :return:
+#     """
+#     for left, right in product(range(len(fnames)), range(len(fnames))):
+#         if right <= left:
+#             continue
+#         left_filename = fnames[left]
+#         right_filename = fnames[right]
+#         left_df = dfs[left]
+#         right_df = dfs[right]
+#         dfs[left], dfs[right] = check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname)
+#     return dfs
 
 
 def read(filename, ftype=None, sheetname=None):
@@ -198,7 +237,7 @@ def write_excel(file_df, outfile):
     writer = ExcelWriter(outfile)
     for sheet in file_df['sheetname'].drop_duplicates():
         df_same_sheet = file_df[file_df['sheetname'] == sheet]
-        merged_df = merge_dataframes(df_same_sheet['filename'], df_same_sheet['dataframe'], sheet)
+        merged_df = merge_dataframes(df_same_sheet, sheet)
         if merged_df.empty:
             writer.write_empty_df(merged_df, sheet)
         else:
@@ -206,19 +245,19 @@ def write_excel(file_df, outfile):
     writer.save_and_close()
 
 
-def write_text(files, outfile):
+def write_text(file_df, outfile):
     writer = TextWriter(outfile)
-    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(file_df, 'Sheet1'))
 
 
-def write_json(files, outfile):
+def write_json(file_df, outfile):
     writer = JSONWriter(outfile)
-    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(file_df, 'Sheet1'))
 
 
-def write_csv(files, outfile):
+def write_csv(file_df, outfile):
     writer = CSVWriter(outfile)
-    writer.write(merge_dataframes(files['filename'], files['dataframe'], 'Sheet1'))
+    writer.write(merge_dataframes(file_df, 'Sheet1'))
 
 
 def join_two_dataframes(lhs, rhs):
@@ -249,38 +288,63 @@ def guess_file_type(filename):
     return os.path.splitext(filename)[1].strip('.')
 
 
-def check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname):
-    """
-    :param left: left dataframe
-    :param right: right dataframe
-    :param lhs: file name 1
-    :param rhs: file name 2
-    :param sheetname: name of the sheet
-    :param column: Column of all the sample names
-    :return: A version of the big dataframe that is free of merge conflicts
-    """
-    df = join_two_dataframes(left_df, right_df)
-    # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
+# def check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname):
+#     """
+#     :param left: left dataframe
+#     :param right: right dataframe
+#     :param lhs: file name 1
+#     :param rhs: file name 2
+#     :param sheetname: name of the sheet
+#     :param column: Column of all the sample names
+#     :return: A version of the big dataframe that is free of merge conflicts
+#     """
+#     df = join_two_dataframes(left_df, right_df)
+#     # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
+#     duplicates = find_duplicate_sample_names(df)
+#     # Creates a list of all the duplicate sample names found, regardless of if they will eventually
+#     # cause a merge conflict
+#     for name in duplicates:
+#         temp = df[df[get_sample_name_column(df)] == name]
+#         # creates a temporary dataframe of all the rows with duplicate sample names
+#         for key in temp:
+#             # This for loop iterates through each of the columns in the temporary dataframe to check how many
+#             # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
+#             # function.
+#             instances = temp[key].nunique()
+#             if instances > 1:
+#                 # The above if statement checks if there is more than one unique value per column. If the global default
+#                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
+#                 # values in each dataframe to match this.
+#                 choice = make_user_choose_between_two_files(temp[key].values, left_filename, right_filename, key,
+#                                                             temp[get_sample_name_column(df)].values[0], sheetname)
+#                 right_df.at[right_df[get_sample_name_column(df)] == name, key] = choice
+#                 left_df.at[left_df[get_sample_name_column(df)] == name, key] = choice
+#     return [fix_dataframe(left_df), fix_dataframe(right_df)]
+
+
+def check_two_dfs_for_merge_conflict(leftDataframe, rightDataframe, sheetname):
+    df = join_two_dataframes(leftDataframe, rightDataframe)
     duplicates = find_duplicate_sample_names(df)
-    # Creates a list of all the duplicate sample names found, regardless of if they will eventually
-    # cause a merge conflict
     for name in duplicates:
         temp = df[df[get_sample_name_column(df)] == name]
-        # creates a temporary dataframe of all the rows with duplicate sample names
-        for key in temp:
+        for column in temp.loc[:, temp.columns != 'Filename']:
             # This for loop iterates through each of the columns in the temporary dataframe to check how many
             # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
             # function.
-            instances = temp[key].nunique()
+            instances = temp[column].nunique()
             if instances > 1:
                 # The above if statement checks if there is more than one unique value per column. If the global default
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
-                choice = make_user_choose_between_two_files(temp[key].values, left_filename, right_filename, key,
-                                                            temp[get_sample_name_column(df)].values[0], sheetname)
-                right_df.at[right_df[get_sample_name_column(df)] == name, key] = choice
-                left_df.at[left_df[get_sample_name_column(df)] == name, key] = choice
-    return [fix_dataframe(left_df), fix_dataframe(right_df)]
+                choice = make_user_choose_between_two_files(temp[column].values,
+                                                            temp['Filename'].values[0],
+                                                            temp['Filename'].values[1],
+                                                            column,
+                                                            temp[get_sample_name_column(df)].values[0],
+                                                            sheetname)
+                df.at[df[get_sample_name_column(df)] == name, column] = choice
+                # Fix this later
+    return df
 
 
 def find_duplicate_sample_names(df):
@@ -476,7 +540,9 @@ def take_keyword(input, values):
     }
     if action.get(input) is 'exit':
         raise ValueError('Aborting merge due to merge conflict')
-    return action.get(input, "Invalid selection. Aborting merge.")
+    selectedIndex = action.get(input, "Invalid selection. Aborting merge.")
+    #fileToDrop = 1 if selectedIndex == 2 else 1
+    return selectedIndex
 
 
 def get_sheetnames(file):
@@ -504,7 +570,7 @@ def convert_merge_default_into_number(input):
             'first': 1,
             'second': 2,
             'join': 3,
-            'average': 4,
+            'mean': 4,
             'abort': 5
         }[input]
     except KeyError:
@@ -560,7 +626,7 @@ def create_df_of_all_infiles(args):
     df_rows_from_args_infile = [file_df_row(file, guess_file_type(file)) for file in args.infiles] if args.infiles else []
     # Creates an array of each row of the file dataframe. It calls the function 'create_file_df()' and gives it the
     # file name and guesses the file type.
-    df_rows_from_args_input = [file_df_row(file, ftype) for file, ftype in args.input] if args.input else []
+    df_rows_from_args_input = [file_df_row(file, ftype) for ftype, file in args.input] if args.input else []
     files = join_many_dataframes(df_rows_from_args_input + df_rows_from_args_infile)
     return files
 
