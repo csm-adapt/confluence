@@ -33,4 +33,3 @@ def check_output(args):
 
 
 #TODO: check_for_input_files
-#Todo: fix recursive function

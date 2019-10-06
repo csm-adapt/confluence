@@ -288,40 +288,6 @@ def guess_file_type(filename):
     return os.path.splitext(filename)[1].strip('.')
 
 
-# def check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname):
-#     """
-#     :param left: left dataframe
-#     :param right: right dataframe
-#     :param lhs: file name 1
-#     :param rhs: file name 2
-#     :param sheetname: name of the sheet
-#     :param column: Column of all the sample names
-#     :return: A version of the big dataframe that is free of merge conflicts
-#     """
-#     df = join_two_dataframes(left_df, right_df)
-#     # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
-#     duplicates = find_duplicate_sample_names(df)
-#     # Creates a list of all the duplicate sample names found, regardless of if they will eventually
-#     # cause a merge conflict
-#     for name in duplicates:
-#         temp = df[df[get_sample_name_column(df)] == name]
-#         # creates a temporary dataframe of all the rows with duplicate sample names
-#         for key in temp:
-#             # This for loop iterates through each of the columns in the temporary dataframe to check how many
-#             # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
-#             # function.
-#             instances = temp[key].nunique()
-#             if instances > 1:
-#                 # The above if statement checks if there is more than one unique value per column. If the global default
-#                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
-#                 # values in each dataframe to match this.
-#                 choice = make_user_choose_between_two_files(temp[key].values, left_filename, right_filename, key,
-#                                                             temp[get_sample_name_column(df)].values[0], sheetname)
-#                 right_df.at[right_df[get_sample_name_column(df)] == name, key] = choice
-#                 left_df.at[left_df[get_sample_name_column(df)] == name, key] = choice
-#     return [fix_dataframe(left_df), fix_dataframe(right_df)]
-
-
 def check_two_dfs_for_merge_conflict(leftDataframe, rightDataframe, sheetname):
     df = join_two_dataframes(leftDataframe, rightDataframe)
     duplicates = find_duplicate_sample_names(df)
@@ -407,14 +373,47 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     duplicates = find_duplicate_sample_names(df)
     for name in duplicates:
         temp = df[df[get_sample_name_column(df)] == name]
-        for key in temp:
-            instances = temp[key].nunique()
+        for column in temp:
+            instances = temp[column].nunique()
             if instances > 1:
-                df.loc[df[get_sample_name_column(df)] == name, key] = make_user_choose_within_one_file(temp[key].values, key, filename, sheetname, temp[get_sample_name_column(df)].values[0])
+                choice = make_user_choose_within_one_file(temp[column].values,
+                                                          list(temp.index.values),
+                                                          column,
+                                                          filename,
+                                                          sheetname,
+                                                          temp[get_sample_name_column(df)].values[0])
+                df.loc[df[get_sample_name_column(df)] == name, column] = choice
     return fix_dataframe(df)
 
 
-def make_user_choose_within_one_file(arr, column, filename='None', sheetname='Sheet1', sample='None'):
+# def make_user_choose_within_one_file(arr, column, filename='None', sheetname='Sheet1', sample='None'):
+#     """
+#     Function: this is called when the user is prompted to resolve a merge conflict in a single file.
+#     It presents the values that are conflicting with each other and has the user enter the number of
+#     the value of his/her choice.
+#     :param arr: list of the sample names that are causing a conflict
+#     :param column: column with the conflicting values
+#     :param filename: name of the file the dataframe came from
+#     :param sheetname: name of the sheet
+#     :param sample: sample name with conflicting values
+#     :return: returns the value that the user picks
+#     """
+#     print('Multiple values found in', filename, 'in sheet', sheetname, 'for sample', sample, 'under column', column)
+#     while True:
+#         for i in range(len(arr)):
+#             print(i+1, ':', arr[i])
+#         print('\n', len(arr)+1, 'Join values into a list',
+#               '\n', len(arr)+2, 'Take average (mean) of values',
+#               '\n', len(arr)+3, 'Abort merge')
+#         choice = int(input('Enter number of value\n'))
+#         if (choice-1) in range(0, len(arr)):
+#             break
+#         else:
+#             print('Invalid response. Must enter a number between 1 and', len(arr), 'Try again.\n')
+#     return arr[choice-1]
+
+
+def make_user_choose_within_one_file(values, rows, column, filename='None', sheetname='Sheet1', sample='None'):
     """
     Function: this is called when the user is prompted to resolve a merge conflict in a single file.
     It presents the values that are conflicting with each other and has the user enter the number of
@@ -426,16 +425,42 @@ def make_user_choose_within_one_file(arr, column, filename='None', sheetname='Sh
     :param sample: sample name with conflicting values
     :return: returns the value that the user picks
     """
-    print('Multiple values found in', filename, 'in sheet', sheetname, 'for sample', sample, 'under column', column)
-    while True:
-        for i in range(len(arr)):
-            print(i+1, ':', arr[i])
-        choice = int(input('Enter number of value\n'))
-        if (choice-1) in range(0, len(arr)):
-            break
-        else:
-            print('Invalid response. Must enter a number between 1 and', len(arr), 'Try again.\n')
-    return arr[choice-1]
+    if default is not None:
+        return take_keyword(convert_merge_default_into_number(default), [values[0], values[-1]])
+    print("Multiple values found in '", filename, "' in sheet '",
+          sheetname, "' for sample '", sample, "' under column '", column, "'")
+    for i in range(len(values)):
+        print('', i+1, ':', 'Take value', values[i], 'from row', rows[i]+1)
+    print('', len(values)+1, ': Join values into a list\n',
+          len(values)+2, ': Take average (mean)\n',
+          len(values)+3, ': Abort merge\n')
+    return take_keyword_one_file(int(input('Enter the number of the value\n')), values)
+
+
+def take_keyword_one_file(input, values):
+    """
+    Function: This takes a number between 1 and 5 and outputs the corresponding value of the array, or aborts the
+    merge if that is what the user chooses.
+    :param argument: keyboard entry from the user
+    :param values: list of the possible valuse for the user to chose
+    :return: value chosen by the user
+    """
+    if input <= len(values):
+        return values[input-1]
+    else:
+        input = input - len(values)
+        action = {
+            1: str(list(values)),
+            # list of both of them
+            2: (values[0]+values[1])/2,
+            # take average of values
+            3: 'exit',
+            # abort merge
+        }
+        if action.get(input) is 'exit':
+            raise ValueError('Aborting merge due to merge conflict')
+        selectedIndex = action.get(input, "Invalid selection. Aborting merge.")
+        return selectedIndex
 
 
 def make_user_choose_between_two_files(arr, file1, file2, column, sample, sheetname='Sheet1'):
@@ -459,7 +484,7 @@ def make_user_choose_between_two_files(arr, file1, file2, column, sample, sheetn
               sheetname, 'for sample', sample, 'under column', column, '\n',
               '\n1: Accept value', arr[0], 'from file', file1,
               '\n2: Accept value', arr[1], 'from file', file2,
-              '\n3: Join files into a list',
+              '\n3: Join values into a list',
               '\n4: Take average (mean)',
               '\n5: Abort the merge\n')
         return take_keyword(int(input('Enter the number\n')), arr)
@@ -541,7 +566,6 @@ def take_keyword(input, values):
     if action.get(input) is 'exit':
         raise ValueError('Aborting merge due to merge conflict')
     selectedIndex = action.get(input, "Invalid selection. Aborting merge.")
-    #fileToDrop = 1 if selectedIndex == 2 else 1
     return selectedIndex
 
 
@@ -791,3 +815,6 @@ else:
     from .CSV import CSVWriter
     from .validator import QMDataFrameValidator
     from .check_args import check
+
+
+#todo: Fix error catcher within the same file to have an average, abort, etc
