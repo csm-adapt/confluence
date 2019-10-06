@@ -39,6 +39,7 @@ def merge_files(args, sheetname='Sheet1'):
     :return:
     """
     args = parse_args(args)
+    set_global_variables(args)
     file_df = create_df_of_all_infiles(args)
     file_df = file_df[file_df['sheetname'] == sheetname]
     merged = merge_dataframes(file_df, sheetname)
@@ -65,10 +66,8 @@ def merge_files(args, sheetname='Sheet1'):
 
 
 def merge_dataframes(file_df, sheetname):
-    print(read(r'test_files/simple1.xlsx', sheetname='empty').as_dataframe())
     file_df = file_df[file_df['sheetname'] == sheetname]
     dfs = add_filename_columns_to_dfs(file_df)
-    print('\n\n\n\n', dfs, '\n\n\n\n\n')
     df = compare_and_merge_multiple_dfs(dfs, sheetname)
     df = drop_filename_column_from_df(df)
     df = fix_dataframe(df)
@@ -80,6 +79,7 @@ def compare_and_merge_multiple_dfs(dfs, sheetname):
     mergedDf = create_empty_df()
     for df in dfs:
         mergedDf = check_two_dfs_for_merge_conflict(mergedDf, df, sheetname)
+        # mergedDf = fix_dataframe(mergedDf)
     return mergedDf
 
 
