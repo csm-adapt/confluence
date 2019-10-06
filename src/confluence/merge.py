@@ -7,6 +7,16 @@ import os
 import inspect
 from itertools import product
 #import check_merge
+from .excel import ExcelReader
+from .excel import ExcelWriter
+from .text import TextReader
+from .text import TextWriter
+from .JSON import JSONReader
+from .JSON import JSONWriter
+from .CSV import CSVReader
+from .CSV import CSVWriter
+from .validator import QMDataFrameValidator
+from .check_args import check
 
 def run(args):
     """
@@ -14,10 +24,6 @@ def run(args):
     :param args: An array of files to be merged
     :return: None
     """
-    args = parse_args(args)
-    # This creates an arg parser object. It contains all the files, file types, and other information
-    # passed from the terminal. For example, if you were to print args.infiles, it would give a list of each
-    # file name. If no value is passed for the variable, they return 'False'.
     args = check(args)
     # This checks the parse_args function
     set_global_variables(args)
@@ -793,28 +799,25 @@ def set_global_variables(args):
 
 
 if __name__ == "__main__":
-    from excel import ExcelReader
-    from excel import ExcelWriter
-    from text import TextReader
-    from text import TextWriter
-    from JSON import JSONReader
-    from JSON import JSONWriter
-    from CSV import CSVReader
-    from CSV import CSVWriter
-    from validator import QMDataFrameValidator
-    from check_args import check
+    # from excel import ExcelReader
+    # from excel import ExcelWriter
+    # from text import TextReader
+    # from text import TextWriter
+    # from JSON import JSONReader
+    # from JSON import JSONWriter
+    # from CSV import CSVReader
+    # from CSV import CSVWriter
+    # from validator import QMDataFrameValidator
+    # from check_args import check
     run(sys.argv[1:])
-else:
-    from .excel import ExcelReader
-    from .excel import ExcelWriter
-    from .text import TextReader
-    from .text import TextWriter
-    from .JSON import JSONReader
-    from .JSON import JSONWriter
-    from .CSV import CSVReader
-    from .CSV import CSVWriter
-    from .validator import QMDataFrameValidator
-    from .check_args import check
-
-
-#todo: Fix error catcher within the same file to have an average, abort, etc
+# else:
+    # from .excel import ExcelReader
+    # from .excel import ExcelWriter
+    # from .text import TextReader
+    # from .text import TextWriter
+    # from .JSON import JSONReader
+    # from .JSON import JSONWriter
+    # from .CSV import CSVReader
+    # from .CSV import CSVWriter
+    # from .validator import QMDataFrameValidator
+    # from .check_args import check
