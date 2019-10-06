@@ -1,6 +1,6 @@
 import sys
 import argparse
-from merge import run
+from .merge import run
 
 
 def parse_args(args):
@@ -16,8 +16,8 @@ def parse_args(args):
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
     return parser.parse_args(args)
 
-def cli(sys_args):
-
+def cli():
+    sys_args = sys.argv[1:]
     args = parse_args(sys_args)
     if args.action[0] == 'merge':
         print(args.action[0])
@@ -27,4 +27,4 @@ def cli(sys_args):
 
 
 if __name__ == "__main__":
-    cli(sys.argv[1:])
+    cli()

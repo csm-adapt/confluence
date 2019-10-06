@@ -11,14 +11,24 @@
 import sys
 
 from pkg_resources import require, VersionConflict
-from setuptools import setup
+from setuptools import setup, find_packages
 
-try:
-    require('setuptools>=38.3')
-except VersionConflict:
-    print("Error: version of setuptools is too old (<38.3)!")
-    sys.exit(1)
+# try:
+#     require('setuptools>=38.3')
+# except VersionConflict:
+#     print("Error: version of setuptools is too old (<38.3)!")
+#     sys.exit(1)
 
+setup(
+    name = 'confleunce',
+    version = '0.0.1',
+    packages = find_packages(),
+    entry_points={
+        'console_scripts': [
+            'confluence = src.confluence.confluence_CLI:cli',
+        ],
+    },
+)
 
-if __name__ == "__main__":
-    setup(use_pyscaffold=True)
+# if __name__ == "__main__":
+#     setup(use_pyscaffold=True)
