@@ -1,6 +1,7 @@
 import sys
 import argparse
 from .merge import run
+from .list_items import list_items
 
 
 def parse_args(args):
@@ -22,6 +23,9 @@ def cli():
     if args.action[0] == 'merge':
         print(args.action[0])
         run(args)
+    elif args.action[0] == 'list':
+        print(args.action[0])
+        list_items(args)
     elif args.action[0] == 'info':
         print("Welcome to the confluence interface: PLACE INFO HERE")
 

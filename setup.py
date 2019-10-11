@@ -20,7 +20,7 @@ from setuptools import setup, find_packages
 #     sys.exit(1)
 
 setup(
-    name = 'confleunce',
+    name = 'confluence',
     version = '0.0.1',
     packages = find_packages(),
     entry_points={
