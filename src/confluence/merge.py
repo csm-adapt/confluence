@@ -24,6 +24,7 @@ def run(args):
     :param args: An array of files to be merged
     :return: None
     """
+    #args = parse_args(args)
     args = check(args)
     # This checks the parse_args function
     set_global_variables(args)
@@ -52,32 +53,13 @@ def merge_files(args, sheetname='Sheet1'):
     return merged
 
 
-# def merge_dataframes(fnames, dfs, sheetname):
-#     """
-#     function: This takes a bunch of different dataframes and merges them into one. It checks for merge conflicts, fixes
-#     what it can, and returns a single dataframe.
-#     :param fnames: list of all the filenames
-#     :param dfs: all the dataframes
-#     :param sheetname: the sheetname being analyzed
-#     :return: merged dataframe.
-#     """
-#     fnames = list(fnames)
-#     dfs = list(dfs)
-#     dfs = compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname)
-#     # checks each dataframe pair for merge conflicts. It either fixes them or raises an error.
-#     df = fix_dataframe(join_many_dataframes(dfs))
-#     # This combines all of them and gets rid of any repeated row
-#     df = sort_values(df)
-#     return df
-
-
 def merge_dataframes(file_df, sheetname):
     file_df = file_df[file_df['sheetname'] == sheetname]
     dfs = add_filename_columns_to_dfs(file_df)
     df = compare_and_merge_multiple_dfs(dfs, sheetname)
     df = drop_filename_column_from_df(df)
-    df = fix_dataframe(df)
-    df = sort_values(df)
+    #df = fix_dataframe(df)
+    # df = sort_values(df)
     return df
 
 
@@ -85,7 +67,7 @@ def compare_and_merge_multiple_dfs(dfs, sheetname):
     mergedDf = create_empty_df()
     for df in dfs:
         mergedDf = check_two_dfs_for_merge_conflict(mergedDf, df, sheetname)
-        # mergedDf = fix_dataframe(mergedDf)
+        mergedDf = fix_dataframe(mergedDf)
     return mergedDf
 
 
@@ -117,29 +99,6 @@ def sort_values(df):
 
 def get_sample_name_column(df):
     return df.columns[0]
-
-
-# def compare_each_possible_pair_of_dataframes(fnames, dfs, sheetname):
-#     """
-#     Function: This takes a bunch of dataframes and compares them in pairs of two. If two dataframes are entered,
-#     it just makes one comparison. If three are entered, it compares 1 and 2, 1 and 3, and 2 and 3. As more and more
-#     dataframes are entered, the amount of comparisons rises pretty quickly. We might get rid of this function and
-#     just compare them all at once, but I will keep you posted on that.
-#
-#     :param fnames: array of file names
-#     :param dfs: array of dataframes
-#     :param sheetname: name of the sheet being read
-#     :return:
-#     """
-#     for left, right in product(range(len(fnames)), range(len(fnames))):
-#         if right <= left:
-#             continue
-#         left_filename = fnames[left]
-#         right_filename = fnames[right]
-#         left_df = dfs[left]
-#         right_df = dfs[right]
-#         dfs[left], dfs[right] = check_for_merge_conflict(left_df, right_df, left_filename, right_filename, sheetname)
-#     return dfs
 
 
 def read(filename, ftype=None, sheetname=None):
@@ -375,7 +334,6 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     :param column: column that is being checked
     :return: fixed dataframe
     """
-    # duplicates = (list(df[get_sample_name_column(df)][df[[get_sample_name_column(df)]].duplicated(keep='last')].drop_duplicates()))
     duplicates = find_duplicate_sample_names(df)
     for name in duplicates:
         temp = df[df[get_sample_name_column(df)] == name]
@@ -390,33 +348,6 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
                                                           temp[get_sample_name_column(df)].values[0])
                 df.loc[df[get_sample_name_column(df)] == name, column] = choice
     return fix_dataframe(df)
-
-
-# def make_user_choose_within_one_file(arr, column, filename='None', sheetname='Sheet1', sample='None'):
-#     """
-#     Function: this is called when the user is prompted to resolve a merge conflict in a single file.
-#     It presents the values that are conflicting with each other and has the user enter the number of
-#     the value of his/her choice.
-#     :param arr: list of the sample names that are causing a conflict
-#     :param column: column with the conflicting values
-#     :param filename: name of the file the dataframe came from
-#     :param sheetname: name of the sheet
-#     :param sample: sample name with conflicting values
-#     :return: returns the value that the user picks
-#     """
-#     print('Multiple values found in', filename, 'in sheet', sheetname, 'for sample', sample, 'under column', column)
-#     while True:
-#         for i in range(len(arr)):
-#             print(i+1, ':', arr[i])
-#         print('\n', len(arr)+1, 'Join values into a list',
-#               '\n', len(arr)+2, 'Take average (mean) of values',
-#               '\n', len(arr)+3, 'Abort merge')
-#         choice = int(input('Enter number of value\n'))
-#         if (choice-1) in range(0, len(arr)):
-#             break
-#         else:
-#             print('Invalid response. Must enter a number between 1 and', len(arr), 'Try again.\n')
-#     return arr[choice-1]
 
 
 def make_user_choose_within_one_file(values, rows, column, filename='None', sheetname='Sheet1', sample='None'):
@@ -747,6 +678,7 @@ def get_dataframe(filename, ftype, sheetname):
     validate = setup_validator()
     # Look under the setup_validator function, I explain how the validator works.
     df = read(filename, ftype, sheetname).as_dataframe()
+    print(df)
     if not df.empty:
         df = validate(df, filename, sheetname)
     return df
@@ -821,3 +753,6 @@ if __name__ == "__main__":
     # from .CSV import CSVWriter
     # from .validator import QMDataFrameValidator
     # from .check_args import check
+
+
+#Todo: Create a file 'list duplicate'
