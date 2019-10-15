@@ -25,9 +25,7 @@ class ExcelReader():
         """
         #args = (self.get_filename() + args)
         args = self.get_filename()
-        print(pd.read_excel(args))
         df = pd.read_excel(args, sheet_name=self.sheetname).dropna(how='all')#.dropna(how='all', axis='columns')
-        print(df)
         return df
 
     def sheetnames(self):

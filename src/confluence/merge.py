@@ -678,7 +678,6 @@ def get_dataframe(filename, ftype, sheetname):
     validate = setup_validator()
     # Look under the setup_validator function, I explain how the validator works.
     df = read(filename, ftype, sheetname).as_dataframe()
-    print(df)
     if not df.empty:
         df = validate(df, filename, sheetname)
     return df
