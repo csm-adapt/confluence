@@ -4,9 +4,9 @@ class QMDataFrameValidator(object):
     def __init__(self):
         self._callbacks = []
 
-    def __call__(self, df, filename, sheet='Sheet1'):
+    def __call__(self, df, filename, sheet, ftype):
         for callback in self._callbacks:
-            df = callback(df, filename, sheet)
+            df = callback(df, filename, sheet, ftype)
         return df
 
     def add_callback(self, func):
