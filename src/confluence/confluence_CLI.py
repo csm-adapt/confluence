@@ -23,8 +23,7 @@ def merge_cli(args):
     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
     parser.add_argument('--outputformat', help='specify output file type')
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
-<<<<<<< HEAD
-    parser.add_argument('k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
+    parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
     run(parser.parse_args(args))
 
 
@@ -33,10 +32,6 @@ def list_cli(args):
     parser.add_argument('list', help='Specifies what to list')
     list_items(args)
 
-=======
-    parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
-    return parser.parse_args(args)
->>>>>>> f4a74cb0eef868b488d8c548af6ef35317be65a6
 
 
 def cli():
