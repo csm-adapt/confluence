@@ -17,7 +17,9 @@ def parse_args(args):
     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
     parser.add_argument('--outputformat', help='specify output file type')
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
+    parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
     return parser.parse_args(args)
+
 
 def cli():
     sys_args = sys.argv[1:]
