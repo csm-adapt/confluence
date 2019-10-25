@@ -29,7 +29,8 @@ def merge_cli(args):
 
 def list_cli(args):
     parser = argparse.ArgumentParser(description='parse arguments')
-    parser.add_argument('list', help='Specifies what to list')
+    parser.add_argument('listObjects', help='Specifies what to list')
+    parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
     list_items(args)
 
 
