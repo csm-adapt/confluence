@@ -7,14 +7,14 @@ import os
 import inspect
 from itertools import product
 #import check_merge
-from .excel import ExcelReader
-from .excel import ExcelWriter
-from .text import TextReader
-from .text import TextWriter
-from .JSON import JSONReader
-from .JSON import JSONWriter
-from .CSV import CSVReader
-from .CSV import CSVWriter
+from .io.excel import ExcelReader
+from .io.excel import ExcelWriter
+from .io.text import TextReader
+from .io.text import TextWriter
+from .io.JSON import JSONReader
+from .io.JSON import JSONWriter
+from .io.CSV import CSVReader
+from .io.CSV import CSVWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
@@ -805,7 +805,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def set_global_variables(args, keyOnly=False):
+def set_global_variables(args):
     """
     Function: initialize the global variables. As of now, there are two, but I might add more later.
     :param args:
@@ -814,13 +814,10 @@ def set_global_variables(args, keyOnly=False):
     global default
     global txtSheetname
     global key
-    if not keyOnly:
-        default = find_default_action(args)
-        txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
+    default = find_default_action(args)
+    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
     key = args.key
     # This gives the user an option to specify a sheetname for non-excel files, otherwise the default name is 'Sheet1'
-    # If we just want to set up the sample name key, we would specify keyOnly=True; this will be used by the list
-    # duplicates function
 
 
 if __name__ == "__main__":
@@ -847,3 +844,7 @@ if __name__ == "__main__":
     # from .validator import QMDataFrameValidator
     # from .check_args import check
 
+
+#todo: create cli argument that specifies the key, ex. --key Sample Name
+#todo: fix the write to csv, txt, and json functions
+#todo:
