@@ -2,10 +2,11 @@ from .merge import *
 
 
 def list_items(args):
-    print(args)
+    print('hello')
+    print('action', args.list)
     return{
         'duplicates': list_duplicates
-    }[args.listObjects](args)
+    }[args.list](args)
 
 
 def list_duplicates(args):
