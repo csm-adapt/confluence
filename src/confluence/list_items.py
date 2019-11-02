@@ -2,6 +2,7 @@ from .merge import *
 
 
 def list_items(args):
+    print('hello')
     print('action', args.list)
     return{
         'duplicates': list_duplicates
@@ -16,6 +17,7 @@ def list_duplicates(args):
         else:
             duplicateList = list_duplicates_for_other_file_types(file, duplicateList)
     if len(duplicateList) == 0:
+        print('No Duplicates')
         return True
     else:
         for i in duplicateList:
