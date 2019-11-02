@@ -7,14 +7,14 @@ import os
 import inspect
 from itertools import product
 #import check_merge
-from .excel import ExcelReader
-from .excel import ExcelWriter
-from .text import TextReader
-from .text import TextWriter
-from .JSON import JSONReader
-from .JSON import JSONWriter
-from .CSV import CSVReader
-from .CSV import CSVWriter
+from .io.excel import ExcelReader
+from .io.excel import ExcelWriter
+from .io.text import TextReader
+from .io.text import TextWriter
+from .io.JSON import JSONReader
+from .io.JSON import JSONWriter
+from .io.CSV import CSVReader
+from .io.CSV import CSVWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
