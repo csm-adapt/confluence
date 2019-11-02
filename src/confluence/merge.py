@@ -805,7 +805,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def set_global_variables(args):
+def set_global_variables(args, keyOnly=False):
     """
     Function: initialize the global variables. As of now, there are two, but I might add more later.
     :param args:
@@ -814,10 +814,13 @@ def set_global_variables(args):
     global default
     global txtSheetname
     global key
-    default = find_default_action(args)
-    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
+    if not keyOnly:
+        default = find_default_action(args)
+        txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
     key = args.key
     # This gives the user an option to specify a sheetname for non-excel files, otherwise the default name is 'Sheet1'
+    # If we just want to set up the sample name key, we would specify keyOnly=True; this will be used by the list
+    # duplicates function
 
 
 if __name__ == "__main__":
@@ -844,7 +847,3 @@ if __name__ == "__main__":
     # from .validator import QMDataFrameValidator
     # from .check_args import check
 
-
-#todo: create cli argument that specifies the key, ex. --key Sample Name
-#todo: fix the write to csv, txt, and json functions
-#todo:
