@@ -47,7 +47,7 @@ def cli():
 
     parser = argparse.ArgumentParser(description='parse arguments')
     parser.add_argument('--action')
-    subparsers = parser.add_subparsers(help ='subparser help')
+    subparsers = parser.add_subparsers(help='subparser help')
 
     #merge CLI
     merge_parser = subparsers.add_parser('merge', help='merge help')
@@ -69,8 +69,6 @@ def cli():
     list_parser.add_argument('infiles', nargs='*', help='input file name with no file type')
     list_parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
     list_parser.set_defaults(func=list_items)
-    list_parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
-    print(parser.action)
 
     #PIF maker CLI
     pif_parser = subparsers.add_parser('makePIF', help='PIF help')

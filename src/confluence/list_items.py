@@ -2,7 +2,7 @@ from .merge import *
 
 
 def list_items(args):
-    print('action', args.action)
+    set_key_variable(args.key)
     return{
         'duplicates': list_duplicates
     }[args.action](args)
@@ -12,7 +12,7 @@ def list_duplicates(args):
     duplicateList = []
     for file in create_list(args.infiles) + create_list(args.input):
         if guess_file_type(file) == 'xlsx':
-            duplicateList = list_duplicates_for_excel(file, duplicateList)
+            duplicateList = list_duplicates_for_excel(file, duplicateList, args.key)
         else:
             duplicateList = list_duplicates_for_other_file_types(file, duplicateList)
     if len(duplicateList) == 0:
@@ -20,7 +20,8 @@ def list_duplicates(args):
         return True
     else:
         for i in duplicateList:
-            print(i.values, '\n')
+            for key in i:
+                print(key, ': ', i[key])
 
 
 def create_list(iterable):
@@ -30,18 +31,18 @@ def create_list(iterable):
         return list(iterable)
 
 
-def list_duplicates_for_excel(filename, duplicateList):
+def list_duplicates_for_excel(filename, duplicateList, key):
     sheets = get_sheetnames(filename)
     for sheet in sheets:
         df = read(filename, 'xlsx', sheet).as_dataframe()
-        if not df.empty():
-            print('\n\n\n\n\n', df.columns,'\n\n\n\n\n')
+        if not df.empty:
+            df = df.drop_duplicates(subset=key)
             duplicates = find_duplicate_sample_names(df)
             if len(duplicates) != 0:
                 dictToAdd = {'Filename': filename,
                              'Sheet': sheet,
-                             'df': df}
-                duplicateList = duplicateList + dictToAdd
+                             'Duplicates': duplicates}
+                duplicateList = duplicateList + [dictToAdd]
     return duplicateList
 
 
@@ -50,8 +51,8 @@ def list_duplicates_for_other_file_types(filename, duplicateList):
     duplicates = find_duplicate_sample_names(df)
     if len(duplicates) != 0:
         dictToAdd = {'Filename': filename,
-                     'df': df}
-        duplicateList = duplicateList + dictToAdd
+                     'Duplicates': duplicates}
+        duplicateList = duplicateList + [dictToAdd]
     return duplicateList
 
 #todo: pass key name into merge.py

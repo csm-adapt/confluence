@@ -15,6 +15,7 @@ from .io.JSON import JSONReader
 from .io.JSON import JSONWriter
 from .io.CSV import CSVReader
 from .io.CSV import CSVWriter
+from .io.pif import PifWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
@@ -27,6 +28,7 @@ def run(args):
     #args = parse_args(args)
     args = check(args)
     # This checks the parse_args function
+    set_global_variables(args)
     # This sets all the default variables. A user might enter a default action for the program to do in case of a
     # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
     # initialize to 'None' if no default action is specified.
@@ -45,7 +47,6 @@ def merge_files(args, sheetname='Sheet1'):
     :return:
     """
     args = parse_args(args)
-    set_global_variables(args)
     file_df = create_df_of_all_infiles(args)
     file_df = file_df[file_df['sheetname'] == sheetname]
     merged = merge_dataframes(file_df, sheetname)
@@ -105,7 +106,6 @@ def sort_values(df):
 
 
 def get_sample_name_column():
-    key = 'foo'
     return key
 
 
@@ -194,7 +194,8 @@ def write(file_df, outfile, outfiletype):
             'xlsx': write_excel,
             'txt': write_text,
             'csv': write_csv,
-            'json': write_json
+            'json': write_json,
+            'pif': write_pif
         }[outfiletype](file_df, outfile)
     except KeyError:
         raise IOError(f"{outfiletype} is not a recognized file type.")
@@ -268,6 +269,21 @@ def write_csv(file_df, outfile):
             writer.write(merged_df)
 
 
+def write_pif(file_df, outfile):
+    sheets = get_sheetnames_from_file_df(file_df)
+    if len(sheets) == 1:
+        writer = CSVWriter(outfile)
+        writer.write(merge_dataframes(file_df, sheets[0]))
+    else:
+        folder = os.path.splitext(outfile)[0]
+        create_directory(folder)
+        for sheet in sheets:
+            modifiedOutfile = folder + '/' + sheet + '_' + outfile
+            writer = PifWriter(modifiedOutfile)
+            df_same_sheet = file_df[file_df['sheetname'] == sheet]
+            merged_df = merge_dataframes(df_same_sheet, sheet)
+            writer.write(merged_df)
+
 def create_directory(folderName):
     try:
         os.mkdir(folderName)
@@ -329,27 +345,30 @@ def check_two_dfs_for_merge_conflict(leftDataframe, rightDataframe, sheetname):
 
 
 def find_duplicate_sample_names(df):
-    column = get_sample_name_column()
-    # Selects the column we want to search
-    duplicated_names = df[[column]].duplicated(keep='last')
-    # Goes through the column and identifies whether or not each name has been repeated. If we had:
-    #
-    #   Sample Name
-    # 0 foo
-    # 1 bar
-    # 2 foo
-    #
-    # duplicated_names would be
-    #
-    #   Sample Name
-    # 0 False
-    # 1 False
-    # 2 True
-    #
-    # The 'keep=last' ensures that we aren't counting repeated sample names twice.
-    return list(df[column][duplicated_names].drop_duplicates())
-    # This creates a new dataframe of the sample name column with only the values that are duplicated, then
-    # turns it into a list. It drops any duplicates.
+    if df.empty:
+        return []
+    else:
+        column = get_sample_name_column()
+        # Selects the column we want to search
+        duplicated_names = df[[column]].duplicated(keep='last')
+        # Goes through the column and identifies whether or not each name has been repeated. If we had:
+        #
+        #   Sample Name
+        # 0 foo
+        # 1 bar
+        # 2 foo
+        #
+        # duplicated_names would be
+        #
+        #   Sample Name
+        # 0 False
+        # 1 False
+        # 2 True
+        #
+        # The 'keep=last' ensures that we aren't counting repeated sample names twice.
+        return list(df[column][duplicated_names].drop_duplicates())
+        # This creates a new dataframe of the sample name column with only the values that are duplicated, then
+        # turns it into a list. It drops any duplicates.
 
 
 def check_for_sample_name_completeness(df, filename, sheetname, ftype):
@@ -639,6 +658,11 @@ def get_file(fname, ftype):
     # If the file extention does not exist and the file type does exist, join them together.
     else:
         return fname
+
+
+def set_key_variable(columnName):
+    global key
+    key = columnName
 
 
 def create_df_of_all_infiles(args):
