@@ -27,7 +27,6 @@ def run(args):
     #args = parse_args(args)
     args = check(args)
     # This checks the parse_args function
-    set_global_variables(args)
     # This sets all the default variables. A user might enter a default action for the program to do in case of a
     # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
     # initialize to 'None' if no default action is specified.

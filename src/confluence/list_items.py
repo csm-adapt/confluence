@@ -35,12 +35,14 @@ def list_duplicates_for_excel(filename, duplicateList):
     sheets = get_sheetnames(filename)
     for sheet in sheets:
         df = read(filename, 'xlsx', sheet).as_dataframe()
-        duplicates = find_duplicate_sample_names(df)
-        if len(duplicates) != 0:
-            dictToAdd = {'Filename': filename,
-                         'Sheet': sheet,
-                         'df': df}
-            duplicateList = duplicateList + dictToAdd
+        if not df.empty():
+            print('\n\n\n\n\n', df.columns,'\n\n\n\n\n')
+            duplicates = find_duplicate_sample_names(df)
+            if len(duplicates) != 0:
+                dictToAdd = {'Filename': filename,
+                             'Sheet': sheet,
+                             'df': df}
+                duplicateList = duplicateList + dictToAdd
     return duplicateList
 
 
@@ -52,3 +54,6 @@ def list_duplicates_for_other_file_types(filename, duplicateList):
                      'df': df}
         duplicateList = duplicateList + dictToAdd
     return duplicateList
+
+#todo: pass key name into merge.py
+#todo: make it so you can pass empty dataframes to list duplicates
