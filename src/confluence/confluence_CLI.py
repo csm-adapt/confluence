@@ -67,6 +67,7 @@ def cli():
     list_parser.add_argument('action', help ='specifies action')
     list_parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
     list_parser.add_argument('infiles', nargs='*', help='input file name with no file type')
+    list_parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
     list_parser.set_defaults(func=list_items)
     list_parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
     print(parser.action)
@@ -76,6 +77,10 @@ def cli():
     pif_parser.add_argument('input_file', help='specifies file to convert to PIF')
     pif_parser.set_defaults(func=convert)
 
+    args = parser.parse_args(sys.argv[1:])
+    # print(args.func)
+
+    args.func(args)
 
 
 

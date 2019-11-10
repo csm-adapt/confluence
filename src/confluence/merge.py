@@ -105,6 +105,7 @@ def sort_values(df):
 
 
 def get_sample_name_column():
+    key = 'foo'
     return key
 
 
