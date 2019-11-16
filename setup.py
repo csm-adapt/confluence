@@ -25,7 +25,7 @@ setup(
     packages = find_packages(),
     entry_points={
         'console_scripts': [
-            'confluence = src.confluence.confluence_CLI:cli',
+            'confluence = src.confluence.confluence_CLI:main',
         ],
     },
 )
