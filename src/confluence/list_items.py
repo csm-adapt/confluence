@@ -57,3 +57,5 @@ def list_duplicates_for_other_file_types(filename, duplicateList):
 
 #todo: pass key name into merge.py
 #todo: make it so you can pass empty dataframes to list duplicates
+
+#todo: make an error message that tells the user there is no sample name

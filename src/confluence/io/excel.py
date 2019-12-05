@@ -35,7 +35,6 @@ class ExcelReader():
 
 class ExcelWriter():
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
-        #super().__init__(self)
         self._filename = None
         self.set_filename(fname)
         self.sheetname = sheetname

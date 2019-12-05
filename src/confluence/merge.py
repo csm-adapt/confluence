@@ -58,7 +58,7 @@ def merge_dataframes(file_df, sheetname):
     df = compare_and_merge_multiple_dfs(dfs, sheetname)
     df = drop_filename_column_from_df(df)
     #df = fix_dataframe(df)
-    # df = sort_values(df)
+    df = sort_values(df)
     return df
 
 
@@ -106,6 +106,7 @@ def sort_values(df):
 
 
 def get_sample_name_column():
+    key = 'foo'
     return key
 
 
