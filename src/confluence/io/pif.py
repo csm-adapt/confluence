@@ -157,7 +157,7 @@ class QualityMadeToPIF(RecordHandler):
         self._schema_map['.*'] = self._create_property
 
     @staticmethod
-    def _create_system_name_and_uid(key, value, record):
+    def _create_system_name_and_uid(record, key, value):
         # create a pif.System
         # set name
         # set uid
@@ -261,8 +261,6 @@ class PifWriter():
     def __init__(self, fname=None, sheetname='Sheet1', **kwds):
         self._filename = None
         self.set_filename(fname)
-        self.sheetname = sheetname
-        self.writer = pd.ExcelWriter(fname, engine='xlsxwriter')
         self._converter = QualityMadeToPIF()
 
     def set_filename(self, fname):
