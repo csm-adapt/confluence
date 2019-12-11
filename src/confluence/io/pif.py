@@ -282,10 +282,6 @@ class PifWriter():
             record = self._converter.populate(**row)
             yield record
 
-        # for i in range(len(df)):
-        #     row = dict(df.iloc[i, :])
-        #     rowPIF = self._converter.populate(kwds=row)
-        #     yield rowPIF
 
     def write(self, df, sheetname='Sheet1'):
         result = self.convert(df)

@@ -38,14 +38,14 @@ class CLIparser():
         pif_parser.set_defaults(func=convert)
 
 
-    def parse_args(self):
-            args = self.parser.parse_args(sys.argv[1:])
+    def parse_args(self, args):
+            args = self.parser.parse_args(args)
             return args
 
 
 
 def main():
-    args = CLIparser().parse_args()
+    args = CLIparser().parse_args(sys.argv[1:])
 
 
 if __name__ == '__main__':

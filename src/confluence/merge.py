@@ -25,7 +25,7 @@ def run(args):
     :param args: An array of files to be merged
     :return: None
     """
-    #args = parse_args(args)
+    args = parse_args(args)
     args = check(args)
     # This checks the parse_args function
     set_global_variables(args)
@@ -827,22 +827,34 @@ def parse_args(args):
     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
     parser.add_argument('--outputformat', help='specify output file type')
     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
+    parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
     return parser.parse_args(args)
 
 
-def set_global_variables(args):
+def set_global_variables(args=None, Default='abort', TxtSheetname='Sheet1', Key='Sample Name'):
     """
     Function: initialize the global variables. As of now, there are two, but I might add more later.
     :param args:
+    :type argparse object
+    :param default:
+    :type str
+    :param txtSheetname = sheetname for excel files when reading non-excel inputs
+    :type str
+    :param Key: column name that acts as sample name
     :return: None
     """
     global default
     global txtSheetname
     global key
-    default = find_default_action(args)
-    txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
-    key = args.key
-    # This gives the user an option to specify a sheetname for non-excel files, otherwise the default name is 'Sheet1'
+    if args:
+        default = find_default_action(args)
+        txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
+        key = args.key
+        # This gives the user an option to specify a sheetname for non-excel files, otherwise the default name is 'Sheet1'
+    else:
+        default = Default
+        txtSheetname = TxtSheetname
+        key = Key
 
 
 if __name__ == "__main__":

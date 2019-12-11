@@ -8,7 +8,11 @@ import subprocess
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir+r'/src')
-from confluence.merge import merge_files, write, file_df_row, read, run, check_two_dfs_for_merge_conflict
+from confluence.merge import *
+#currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+#parentdir = os.path.dirname(currentdir)
+#sys.path.insert(0, parentdir+r'/src')
+from confluence.confluence_CLI import *
 
 
 __author__ = "amikulichmines"
@@ -40,12 +44,14 @@ def expected_dataframe_with_complex_data():
 
 
 def test_simple_merge_files(expected_dataframe):
+    set_global_variables
     actual = merge_files([r'test_files/simple1.xlsx', r'test_files/simple2.xlsx'])
     expected = expected_dataframe
     assert actual.equals(expected)
 
 
 def test_merge_with_extra_rows(expected_dataframe):
+
     actual = merge_files([r'test_files/extra_rows1.xlsx', r'test_files/extra_rows2.xlsx'])
     expected = expected_dataframe
     print('\n\n\n\n\n\nactual\n\n\n\n\n\n', actual)
@@ -60,6 +66,7 @@ def test_merge_with_extra_columns(expected_dataframe_with_extra_column):
 
 
 def test_merge_with_conflict(expected_dataframe):
+    set_global_variables(Default='first')
     actual = merge_files([r'test_files/merge_conflict1.xlsx', r'test_files/merge_conflict2.xlsx', '-m', 'first'])
     expected = expected_dataframe
     assert actual.equals(expected)
@@ -95,6 +102,7 @@ def test_write():
 
 
 def test_fails():
+    set_global_variables(Default='abort')
     with pytest.raises(OSError):
         write(file_df_row(r'test_files/simple1.xlsx', 'xlsx'), r'test_files/Newfile.xlsx', 'pdf')
     with pytest.raises(OSError):
@@ -119,21 +127,26 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
 #     assert actual.empty
 
 def test_cli():
-    commands = [
-        'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/simple3.xlsx test_files/simple1.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/complex_data1.xlsx test_files/complex_data2.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/complex_data1.xlsx -o test_files/newfile.xlsx',
-        'python3 merge.py test_files/simple3.xlsx -o test_files/newfile.xlsx'
-    ]
+    # commands = [
+    #     'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/simple3.xlsx test_files/simple1.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/complex_data1.xlsx test_files/complex_data2.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/complex_data1.xlsx -o test_files/newfile.xlsx',
+    #     'python3 merge.py test_files/simple3.xlsx -o test_files/newfile.xlsx'
+    # ]
+    # for cmd in commands:
+    #     process = subprocess.Popen(cmd, cwd = '../src/confluence', shell=True)
+    #     process.wait(timeout=None)
+    #     rval = process.returncode
+    #     assert rval == 0
+    commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
+                ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
     for cmd in commands:
-        process = subprocess.Popen(cmd, cwd = '../src/confluence', shell=True)
-        process.wait(timeout=None)
-        rval = process.returncode
-        assert rval == 0
+        CLIparser().parse_args(cmd)
 
 
 def test_run():
-    run([r'test_files/complete_excel.xlsx', '-o', r'test_files/Newfile.xlsx'])
+    args = parse_args([r'test_files/complete_excel.xlsx', '-o', r'test_files/Newfile.xlsx'])
+    run(args)
