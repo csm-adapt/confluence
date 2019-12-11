@@ -78,10 +78,10 @@ def parse_args(args):
     list_parser = subparsers.add_parser('list', help='list help')
     list_parser.set_defaults(func = list_main)
     generate_list_args(list_parser)
-
-    def parse_args(self, args):
-            args = self.parser.parse_args(args)
-            return args
+    #
+    # def parse_args(self, args):
+    #         args = self.parser.parse_args(args)
+    #         return args
 
 
 
