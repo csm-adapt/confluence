@@ -25,7 +25,7 @@ def run(args):
     :param args: An array of files to be merged
     :return: None
     """
-    args = parse_args(args)
+    #args = parse_args(args)
     args = check(args)
     # This checks the parse_args function
     set_global_variables(args)
