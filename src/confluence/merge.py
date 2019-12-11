@@ -19,6 +19,29 @@ from .io.pif import PifWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
+def generate_merge_args(description):
+    def parse_args(args):
+
+        if isinstance(args,list):
+            parser = argparse.ArgumentParser(description = description)
+        else:
+            parser = args
+
+        parser.add_argument('infiles', nargs='*', help='input file name with no file type')
+        parser.add_argument('-o', '--output', help='output file name')
+        parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
+        parser.add_argument('-m', '--mergedefault', help='default solution to merge conflicts')
+        parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
+        parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
+        parser.add_argument('--outputformat', help='specify output file type')
+        parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
+        parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
+
+        if isinstance(args, list):
+            return parser.parse_args(args)
+    return parse_args
+
+
 def run(args):
     """
     Function: This is the function called when the merge.py is used in the terminal.
@@ -858,30 +881,4 @@ def set_global_variables(args=None, Default='abort', TxtSheetname='Sheet1', Key=
 
 
 if __name__ == "__main__":
-    # from excel import ExcelReader
-    # from excel import ExcelWriter
-    # from text import TextReader
-    # from text import TextWriter
-    # from JSON import JSONReader
-    # from JSON import JSONWriter
-    # from CSV import CSVReader
-    # from CSV import CSVWriter
-    # from validator import QMDataFrameValidator
-    # from check_args import check
     run(sys.argv[1:])
-# else:
-    # from .excel import ExcelReader
-    # from .excel import ExcelWriter
-    # from .text import TextReader
-    # from .text import TextWriter
-    # from .JSON import JSONReader
-    # from .JSON import JSONWriter
-    # from .CSV import CSVReader
-    # from .CSV import CSVWriter
-    # from .validator import QMDataFrameValidator
-    # from .check_args import check
-
-
-#todo: create cli argument that specifies the key, ex. --key Sample Name
-#todo: fix the write to csv, txt, and json functions
-#todo:
