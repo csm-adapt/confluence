@@ -79,13 +79,14 @@ def parse_args(args):
     list_parser.set_defaults(func = list_main)
     generate_list_args(list_parser)
 
+    def parse_args(self, args):
+            args = self.parser.parse_args(args)
+            return args
 
 
 
 def main():
-    args = sys.argv[1:]
-    if isinstance(args,list):
-        args = parse_args(args)
+    args = CLIparser().parse_args(sys.argv[1:])
 
 
 if __name__ == '__main__':
