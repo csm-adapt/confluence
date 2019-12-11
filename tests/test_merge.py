@@ -48,6 +48,8 @@ def test_simple_merge_files(expected_dataframe):
 def test_merge_with_extra_rows(expected_dataframe):
     actual = merge_files([r'test_files/extra_rows1.xlsx', r'test_files/extra_rows2.xlsx'])
     expected = expected_dataframe
+    print('\n\n\n\n\n\nactual\n\n\n\n\n\n', actual)
+    print('expected \n')
     assert actual.equals(expected)
 
 
