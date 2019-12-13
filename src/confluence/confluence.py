@@ -78,24 +78,22 @@ def parse_args(args):
     list_parser = subparsers.add_parser('list', help='list help')
     list_parser.set_defaults(func = list_main)
     generate_list_args(list_parser)
-    #
-    # def parse_args(self, args):
-    #         args = self.parser.parse_args(args)
-    #         return args
 
 
 
 def main():
-    args = CLIparser().parse_args(sys.argv[1:])
+    args = sys.argv[1:]
+    if isinstance(args,list):
+        args = parse_args(args)
 
 
 if __name__ == '__main__':
     main()
 
 
+%return parser
 
-
-
+##main calls logging,
 
 ################################################################################################
 ################################################################################################

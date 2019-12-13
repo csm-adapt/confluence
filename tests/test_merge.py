@@ -126,25 +126,11 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
 #     actual = merge_files([r'test_files/simple1.xlsx'], 'empty')
 #     assert actual.empty
 
-# def test_cli():
-#     # commands = [
-#     #     'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/simple1.xlsx test_files/simple2.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/simple2.xlsx test_files/simple3.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/simple3.xlsx test_files/simple1.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/complex_data1.xlsx test_files/complex_data2.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/complex_data1.xlsx -o test_files/newfile.xlsx',
-#     #     'python3 merge.py test_files/simple3.xlsx -o test_files/newfile.xlsx'
-#     # ]
-#     # for cmd in commands:
-#     #     process = subprocess.Popen(cmd, cwd = '../src/confluence', shell=True)
-#     #     process.wait(timeout=None)
-#     #     rval = process.returncode
-#     #     assert rval == 0
-#     commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
-#                 ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
-#     for cmd in commands:
-#         CLIparser().parse_args(cmd)
+def test_cli():
+    commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
+                ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
+    for cmd in commands:
+        CLIparser().parse_args(cmd)
 
 
 def test_run():
