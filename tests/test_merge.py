@@ -9,9 +9,6 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir+r'/src')
 from confluence.merge import *
-#currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-#parentdir = os.path.dirname(currentdir)
-#sys.path.insert(0, parentdir+r'/src')
 from confluence.confluence import *
 
 
@@ -122,15 +119,14 @@ def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_col
     assert sheet1.equals(expectedSheet1)
     assert sheet2.equals(expectedSheet2)
 
-# def test_with_empty_df():
-#     actual = merge_files([r'test_files/simple1.xlsx'], 'empty')
-#     assert actual.empty
 
-def test_cli():
-    commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
-                ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
-    for cmd in commands:
-        # CLIparser().parse_args(cmd)
+# ############ Once the CLI parser is ready to go, we will go ahead and create this function.###########
+
+# def test_cli():
+#     commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
+#                 ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
+#     for cmd in commands:
+#         CLIparser().parse_args(cmd)
 
 
 
