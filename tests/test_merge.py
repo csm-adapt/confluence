@@ -12,7 +12,7 @@ from confluence.merge import *
 #currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 #parentdir = os.path.dirname(currentdir)
 #sys.path.insert(0, parentdir+r'/src')
-from confluence.confluence_CLI import *
+from confluence.confluence import *
 
 
 __author__ = "amikulichmines"
@@ -130,9 +130,10 @@ def test_cli():
     commands = [["merge", "src/confluence/test_files/simple1.xlsx -k 'foo' -o newfile.xlsx"],
                 ["list", "duplicates", "src/confluence/test_files/simple1.xlsx -k 'foo'"]]
     for cmd in commands:
-        CLIparser().parse_args(cmd)
+        # CLIparser().parse_args(cmd)
+
 
 
 def test_run():
-    args = parse_args([r'test_files/complete_excel.xlsx', '-o', r'test_files/Newfile.xlsx'])
+    args = create_parser(['test_files/complete_excel.xlsx', '-o', 'test_files/Newfile.xlsx'])
     run(args)

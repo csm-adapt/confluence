@@ -69,7 +69,7 @@ def merge_files(args, sheetname='Sheet1'):
     :param args:
     :return:
     """
-    args = parse_args(args)
+    args = create_parser(args)
     file_df = create_df_of_all_infiles(args)
     file_df = file_df[file_df['sheetname'] == sheetname]
     merged = merge_dataframes(file_df, sheetname)
@@ -836,7 +836,7 @@ def find_default_action(args):
     return default
 
 
-def parse_args(args):
+def create_parser(args):
     """
     function: set up a parser with all the args the user passes to the function
     :return: parser containing all the args

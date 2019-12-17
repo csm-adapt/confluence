@@ -205,7 +205,6 @@ class QualityMadeToPIF(RecordHandler):
         # Double check relative path
         return record
 
-
     @staticmethod
     def _canonicalize_scalar(value):
         """Returns the value in its most natural representation."""
@@ -227,8 +226,6 @@ class QualityMadeToPIF(RecordHandler):
                 last = match.strip('()').strip()
                 return (first, last)
         return (k, None)
-
-
 
     @staticmethod
     def _create_property(record, key, value):
@@ -312,8 +309,7 @@ class PifWriter():
             record = self._converter.populate(**row)
             yield record
 
-
-    def write(self, df, sheetname='Sheet1'):
+    def write(self, df):
         result = self.convert(df)
         with open(self.get_filename(), 'w+') as output_file:
             pif.dump(list(result), output_file, indent=2)

@@ -55,6 +55,7 @@ from .list_items import generate_list_args
 ################################################################################################
 ################################################################################################
 
+
 def parse_args(args):
 
     if isinstance(args, list):
@@ -78,7 +79,7 @@ def parse_args(args):
     list_parser = subparsers.add_parser('list', help='list help')
     list_parser.set_defaults(func = list_main)
     generate_list_args(list_parser)
-
+    return parser
 
 
 def main():
@@ -91,7 +92,6 @@ if __name__ == '__main__':
     main()
 
 
-%return parser
 
 ##main calls logging,
 
