@@ -2,7 +2,7 @@ import sys
 import argparse
 from .list_items import list_items
 from .pif_maker import convert
-from .merge import run as merge_main
+from .run import run as merge_main
 from .merge import generate_merge_args
 from .list_items import list_items as list_main
 from .list_items import generate_list_args

@@ -13,3 +13,5 @@ class QMDataFrameValidator(object):
         #if not hasattr('__call__', func):
             #raise ValueError("Callback functions must have a ‘__call__’ attribute.")
         self._callbacks.append(func)
+
+
