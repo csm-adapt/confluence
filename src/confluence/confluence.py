@@ -12,6 +12,7 @@ from .merge import run as merge_main
 from .merge import generate_merge_args
 from .list_items import list_items as list_main
 from .list_items import generate_list_args
+import logging
 
 
 from confluence import __version__
@@ -23,18 +24,16 @@ __license__ = "mit"
 _logger = logging.getLogger(__name__)
 
 
-
 def parse_args(args):
-
     if isinstance(args, list):
         parser = argparse.ArgumentParser(description=__doc__)
     else:
         parser = args
 
     subparsers = parser.add_subparsers(
-        title = "Commands",
-        required = True,
-        help = "Operations availible from confluence CLI")
+        title="Commands",
+        required=True,
+        help="Operations available from confluence CLI")
 
     #Merge Parser
     merge_parser = subparsers.add_parser('merge', help='merge help')

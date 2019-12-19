@@ -1,4 +1,3 @@
-
 import sys
 import argparse
 import pandas as pd
@@ -77,15 +76,33 @@ def merge_files(args, sheetname='Sheet1'):
 
 
 def merge_dataframes(file_df, sheetname):
+    """
+    Function: Takes the file dataframe (the big dataframe containing the filenames, corresponding dataframes, file
+    type, and sheet names of each input file) and gets the merged dataframe. It does this in the following order:
+    1.  Makes a list of the dataframes, and adds a filename column. This way, if there is a merge conflict, it can
+        display to the user which input file created the conflict.
+    2.  Feeds the list of dataframes to 'compare_and_merge_multiple_dfs'. This function returns a merged dataframe
+    3.  Since we no longer need to know which line in the merged dataframe came from which input file, it deletes the
+        column
+    4.  Sorts the values by sample name. This may be taken off in the future.
+    :param file_df: file dataframe with all the metadata
+    :param sheetname: sheetname being merged
+    :return: merged dataframe
+    """
     dfs = add_filename_columns_to_dfs(file_df)
     df = compare_and_merge_multiple_dfs(dfs, sheetname)
     df = drop_filename_column_from_df(df)
-    #df = fix_dataframe(df)
     df = sort_values(df)
     return df
 
 
 def compare_and_merge_multiple_dfs(dfs, sheetname):
+    """
+    Function: takes a list of dataframes and merges them.
+    :param dfs: list of dataframes
+    :param sheetname: sheetname being merged
+    :return: merged dataframe
+    """
     mergedDf = create_empty_df()
     for df in dfs:
         mergedDf = check_two_dfs_for_merge_conflict(mergedDf, df, sheetname)
@@ -94,15 +111,34 @@ def compare_and_merge_multiple_dfs(dfs, sheetname):
 
 
 def get_list_of_dataframes_from_file_df(file_df):
+    """
+    Function: takes the file dataframe and gets the 'dataframe' column, then converts it to a list
+    :param file_df: file dataframe
+    :return: list of dataframes
+    """
     dfs = list(file_df['dataframe'])
     return dfs
 
 def get_list_of_dataframes_from_file_df_by_specific_sheet(file_df, sheetname):
+    """
+    Function: Takes the file dataframe and returns a list of dataframes that have a specified sheetname
+    :param file_df: file dataframe
+    :param sheetname: Sheetname to be used
+    :return: List of dataframes from the same sheetname
+    """
     df_same_sheet = file_df[file_df['sheetname'] == sheetname]
     dfs = get_list_of_dataframes_from_file_df(df_same_sheet)
     return dfs
 
+
 def add_filename_columns_to_dfs(file_df):
+    """
+    Function: Takes the individual dataframes from the file dataframe and their corresponding filenames and adds a
+    filename column to the dataframe. Each row of each dataframe came from the same file, so the filename column will
+    be homogenous for a single dataframe.
+    :param file_df:
+    :return: list of dataframes with a filename column added to each
+    """
     dfs = get_list_of_dataframes_from_file_df(file_df)
     filenames = list(file_df['filename'])
     for i in range(len(file_df)):
@@ -111,25 +147,43 @@ def add_filename_columns_to_dfs(file_df):
 
 
 def drop_filename_column_from_df(df):
+    """
+    Function: Removes the filename column
+    :param df: dataframe with a filename column
+    :return: dataframe without a filename column
+    """
     df = df.drop('Filename', axis=1)
     return df
 
 
 def add_filename_column_to_single_df(df, filename):
+    """
+    Function: Takes a dataframe and adds a filename column. It populates each element with the variable 'filename'.
+    :param df: Dataframe passed in
+    :param filename: name of the file
+    :return: dataframe with filename column
+    """
     length = len(df)
-    filenameArray = [filename]*length
-    df['Filename'] = filenameArray
+    filenameList = [filename]*length
+    df['Filename'] = filenameList
     return df
 
 
 def sort_values(df):
+    """
+    Function: Sorts values based on sample name column
+    :param df: Unsorted dataframe
+    :return: Sorted dataframe
+    """
     if df.empty:
         return df
     return df.sort_values([get_sample_name_column()]).reset_index(drop=True)
 
 
 def get_sample_name_column():
-    key = 'foo'
+    """
+    :return: name of the column being used as the sample name column.
+    """
     return key
 
 
@@ -228,7 +282,9 @@ def write(file_df, outfile, outfiletype):
 def write_excel(file_df, outfile):
     """
     Function: This is the most complex writer because it is the only one with multiple different sheet names. The way
-    it works is by first
+    it works is by first getting all the sheetnames that will have to be written to. Then, for each sheetname, it grabs
+    the dataframes in the file dataframe with said sheetname, merges them, then writes to the file. After all sheetnames
+    are satisfied, it saves and closes the file.
     :param files: A dictionary of filenames and their corresponding tile types
     :param outfile: The output file to write to
     :return: none
@@ -246,6 +302,14 @@ def write_excel(file_df, outfile):
 
 
 def write_text(file_df, outfile, delimiter=' '):
+    """
+    Function: Writes the dataframe to a text file. If multiple sheetnames are present, it creates a directory and
+    populates that directory with each merged dataframe. Otherwise, it just writes to one file.
+    :param file_df: File dataframe
+    :param outfile: file name to write to
+    :param delimiter: delimiter
+    :return: Nothing
+    """
     sheets = get_sheetnames_from_file_df(file_df)
     if len(sheets) == 1:
         writer = TextWriter(outfile, delimiter=delimiter)
@@ -262,6 +326,14 @@ def write_text(file_df, outfile, delimiter=' '):
 
 
 def write_json(file_df, outfile):
+    """
+        Function: Writes the dataframe to a JSON file. If multiple sheetnames are present, it creates a directory and
+        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
+        :param file_df: File dataframe
+        :param outfile: file name to write to
+        :param delimiter: delimiter
+        :return: Nothing
+        """
     sheets = get_sheetnames_from_file_df(file_df)
     if len(sheets) == 1:
         writer = JSONWriter(outfile)
@@ -278,6 +350,14 @@ def write_json(file_df, outfile):
 
 
 def write_csv(file_df, outfile):
+    """
+        Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
+        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
+        :param file_df: File dataframe
+        :param outfile: file name to write to
+        :param delimiter: delimiter
+        :return: Nothing
+        """
     sheets = get_sheetnames_from_file_df(file_df)
     if len(sheets) == 1:
         writer = CSVWriter(outfile)
@@ -294,9 +374,17 @@ def write_csv(file_df, outfile):
 
 
 def write_pif(file_df, outfile):
+    """
+        Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
+        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
+        :param file_df: File dataframe
+        :param outfile: file name to write to
+        :param delimiter: delimiter
+        :return: Nothing
+        """
     sheets = get_sheetnames_from_file_df(file_df)
     if len(sheets) == 1:
-        writer = CSVWriter(outfile)
+        writer = PifWriter(outfile)
         writer.write(merge_dataframes(file_df, sheets[0]))
     else:
         folder = os.path.splitext(outfile)[0]
@@ -307,6 +395,7 @@ def write_pif(file_df, outfile):
             df_same_sheet = file_df[file_df['sheetname'] == sheet]
             merged_df = merge_dataframes(df_same_sheet, sheet)
             writer.write(merged_df)
+
 
 def create_directory(folderName):
     try:
