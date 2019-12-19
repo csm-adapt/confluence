@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'confluence = src.confluence.confluence:main',
+            'confluence-merge = src.confluence.merge.main'
         ],
     },
 )

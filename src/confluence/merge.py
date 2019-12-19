@@ -1,8 +1,20 @@
+<<<<<<< .merge_file_1YkNPV
+=======
+"""
+confluence-merge merges data from two or more input files. This performs
+several checks:
+
+1. The columns in each table
+1. Unique rows (a.k.a. records) from each
+"""
+
+import os
+>>>>>>> .merge_file_zWtWsq
 import sys
 import argparse
+import logging
 import pandas as pd
 import numpy as np
-import os
 import inspect
 from itertools import product
 #import check_merge
@@ -18,30 +30,65 @@ from .io.pif import PifWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
-def generate_merge_args(description):
-    def parse_args(args):
 
-        if isinstance(args,list):
-            parser = argparse.ArgumentParser(description = description)
-        else:
-            parser = args
+__author__ = "Branden Kappes"
+__copyright__ = "Branden Kappes"
+__license__ = "mit"
 
-        parser.add_argument('infiles', nargs='*', help='input file name with no file type')
-        parser.add_argument('-o', '--output', help='output file name')
-        parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
-        parser.add_argument('-m', '--mergedefault', help='default solution to merge conflicts')
-        parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
-        parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
-        parser.add_argument('--outputformat', help='specify output file type')
-        parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
-        parser.add_argument('-k', '--key', help='Specify the name of the smaple name column', default='Sample Name')
-
-        if isinstance(args, list):
-            return parser.parse_args(args)
-    return parse_args
+_logger = logging.getLogger(__name__)
 
 
-def run(args):
+def parse_args(args):
+
+    if isinstance(args,list):
+        parser = argparse.ArgumentParser(description=__doc__)
+    else:
+        parser = args
+
+    parser.add_argument('infiles',
+                        nargs='*',
+                        help='Names of files to be merged.')
+    parser.add_argument('-o', '--output',
+                        help='Output file name.')
+    parser.add_argument('-m', '--mergedefault',
+                        default=abort_merge,
+                        help='Default method to solve merge conflicts. '
+                             'Default: abort')
+    parser.add_argument('--interactive',
+                        action='store_true',
+                        help='Prompt user for input in case of conflict.')
+    parser.add_argument('-s', '--sheetname',
+                        help='Specify a default sheetname (Excel file).')
+    parser.add_argument('-f', '--oformat',
+                        help='Specify the format of the output file.')
+    parser.add_argument('-q', '--quiet',
+                        action='store_true',
+                        help='Should a merge conflict happen, default to abort')
+    parser.add_argument('-k', '--key',
+                        help='Specify the column name used as the primary key. '
+                             'Default: Sample Name',
+                        default='Sample Name')
+
+    if isinstance(args, list):
+        return parser.parse_args(args)
+
+
+def setup_logging(loglevel):
+    """Setup basic logging
+
+    Args:
+      loglevel (int): minimum loglevel for emitting messages
+    """
+    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
+    logging.basicConfig(level=loglevel, stream=sys.stdout,
+                        format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
+
+
+def abort_merge():
+    sys.exit(1)
+
+
+def execute(args):
     """
     Function: This is the function called when the merge.py is used in the terminal.
     :param args: An array of files to be merged
@@ -968,6 +1015,32 @@ def set_global_variables(args=None, Default='abort', TxtSheetname='Sheet1', Key=
         txtSheetname = TxtSheetname
         key = Key
 
+def main(args):
+    """Main entry point allowing external calls
+
+    Args:
+      args ([str]): command line parameter list
+    """
+    if isinstance(args, list):
+        args = parse_args(args)
+    setup_logging(args.loglevel)
+    _logger.debug(f"Starting confluence-merge.")
+    try:
+        execute(args)
+    except Exception as e:
+        _logger.error(f"Unhandled exception raised message: {e}")
+        if isinstance(args, list):
+            sys.exit(1)
+        else:
+            raise e
+    _logger.debug(f"Completed confluence-merge.")
+
+
+def run():
+    """Entry point for console_scripts
+    """
+    main(sys.argv[1:])
+
 
 if __name__ == "__main__":
-    run(sys.argv[1:])
+    run()
