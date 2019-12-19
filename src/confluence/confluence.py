@@ -8,10 +8,10 @@ enough to adapt to a wide-range of projects.
 
 import sys
 import argparse
-from .merge import run as merge_main
-from .merge import generate_merge_args
-from .list_items import list_items as list_main
-from .list_items import generate_list_args
+from .merge import main as merge_main
+from .merge import parse_args as merge_parse_args
+#from .list_items import list_items as list_main
+f#rom .list_items import generate_list_args
 
 
 from confluence import __version__
@@ -32,14 +32,14 @@ def parse_args(args):
         parser = args
 
     subparsers = parser.add_subparsers(
-        title = "Commands",
-        required = True,
-        help = "Operations availible from confluence CLI")
+        title="Commands",
+        required=True,
+        help="Operations available from confluence CLI")
 
     #Merge Parser
     merge_parser = subparsers.add_parser('merge', help='merge help')
     merge_parser.set_defaults(func=merge_main)
-    generate_merge_args(merge_parser)
+    merge_parse_args(merge_parser)
 
     #List Parser
     list_parser = subparsers.add_parser('list', help='list help')
@@ -56,8 +56,10 @@ def setup_logging(loglevel):
       loglevel (int): minimum loglevel for emitting messages
     """
     logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(level=loglevel, stream=sys.stdout,
-                        format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
+    logging.basicConfig(level=loglevel,
+                        stream=sys.stdout,
+                        format=logformat,
+                        datefmt="%Y-%m-%d %H:%M:%S")
 
 
 def main(args):
@@ -69,9 +71,13 @@ def main(args):
     if isinstance(args, list):
         args = parse_args(args)
     setup_logging(args.loglevel)
-    _logger.debug("Starting calculation from climath...")
-    args.func(args)
-    _logger.info("End climath")
+    _logger.debug("Starting confluence...")
+    try:
+        args.func(args)
+    except Exception as e:
+        _logger.error(f"Unhandled exception raised message: {e}")
+        sys.exit(1)
+    _logger.debug("Confluence complete.")
 
 
 def run():
