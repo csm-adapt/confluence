@@ -19,11 +19,12 @@ from .io.pif import PifWriter
 from .validator import QMDataFrameValidator
 from .check_args import check
 
+
 def generate_merge_args(description):
     def parse_args(args):
 
         if isinstance(args,list):
-            parser = argparse.ArgumentParser(description = description)
+            parser = argparse.ArgumentParser(description=description)
         else:
             parser = args
 
@@ -80,7 +81,6 @@ def merge_dataframes(file_df, sheetname):
     dfs = add_filename_columns_to_dfs(file_df)
     df = compare_and_merge_multiple_dfs(dfs, sheetname)
     df = drop_filename_column_from_df(df)
-    #df = fix_dataframe(df)
     df = sort_values(df)
     return df
 
@@ -97,10 +97,12 @@ def get_list_of_dataframes_from_file_df(file_df):
     dfs = list(file_df['dataframe'])
     return dfs
 
+
 def get_list_of_dataframes_from_file_df_by_specific_sheet(file_df, sheetname):
     df_same_sheet = file_df[file_df['sheetname'] == sheetname]
     dfs = get_list_of_dataframes_from_file_df(df_same_sheet)
     return dfs
+
 
 def add_filename_columns_to_dfs(file_df):
     dfs = get_list_of_dataframes_from_file_df(file_df)
@@ -131,7 +133,6 @@ def sort_values(df):
 def get_sample_name_column():
     key = 'foo'
     return key
-
 
 
 def read(filename, ftype=None, sheetname=None):
@@ -307,6 +308,7 @@ def write_pif(file_df, outfile):
             df_same_sheet = file_df[file_df['sheetname'] == sheet]
             merged_df = merge_dataframes(df_same_sheet, sheet)
             writer.write(merged_df)
+
 
 def create_directory(folderName):
     try:
@@ -781,10 +783,10 @@ def add_row_to_file_df(file_df, filename, dataframe, ftype, sheetname):
     :return: dataframe with the new row
     """
     return file_df.append({'filename': filename,
-                      'dataframe': dataframe,
-                      'type': ftype,
-                      'sheetname': sheetname
-                      }, ignore_index=True)
+                           'dataframe': dataframe,
+                           'type': ftype,
+                           'sheetname': sheetname
+                           }, ignore_index=True)
 
 
 def file_df_row(filename, ftype):
