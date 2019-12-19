@@ -1,8 +1,8 @@
 import pandas as pd
 
-class ExcelReader():
+
+class ExcelReader:
     def __init__(self, fname=None, sheetname=None, **kwds):
-        #super().__init__(self)
         self._filename = None
         self.set_filename(fname)
         self.sheetname = sheetname if sheetname is not None else self.sheetnames()[0]
@@ -25,7 +25,7 @@ class ExcelReader():
         """
         #args = (self.get_filename() + args)
         args = self.get_filename()
-        df = pd.read_excel(args, sheet_name=self.sheetname).dropna(how='all')#.dropna(how='all', axis='columns')
+        df = pd.read_excel(args, sheet_name=self.sheetname).dropna(how='all')
         return df
 
     def sheetnames(self):
