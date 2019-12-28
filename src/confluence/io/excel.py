@@ -10,7 +10,6 @@ class ExcelReader():
     def set_filename(self, fname):
         self._filename = fname
 
-
     def get_filename(self):
         return self._filename
 

@@ -8,19 +8,11 @@ enough to adapt to a wide-range of projects.
 
 import sys
 import argparse
-<<<<<<< .merge_file_yTqgRh
-from .merge import run as merge_main
-from .merge import generate_merge_args
-from .list_items import list_items as list_main
-from .list_items import generate_list_args
 import logging
-=======
-from .merge import main as merge_main
-from .merge import parse_args as merge_parse_args
+from .confluence_merge import main as merge_main
+from .confluence_merge import parse_args as merge_parse_args
 #from .list_items import list_items as list_main
-f#rom .list_items import generate_list_args
->>>>>>> .merge_file_CGOa2x
-
+#from .list_items import generate_list_args
 
 from confluence import __version__
 
@@ -51,7 +43,9 @@ def parse_args(args):
     list_parser = subparsers.add_parser('list', help='list help')
     list_parser.set_defaults(func=list_main)
     generate_list_args(list_parser)
-    return parser
+
+    if isinstance(args, list):
+        return parser.parse_args(args)
 
 
 

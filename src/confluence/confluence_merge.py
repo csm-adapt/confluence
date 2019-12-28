@@ -1,5 +1,3 @@
-<<<<<<< .merge_file_1YkNPV
-=======
 """
 confluence-merge merges data from two or more input files. This performs
 several checks:
@@ -9,7 +7,6 @@ several checks:
 """
 
 import os
->>>>>>> .merge_file_zWtWsq
 import sys
 import argparse
 import logging
@@ -17,7 +14,9 @@ import pandas as pd
 import numpy as np
 import inspect
 from itertools import product
-#import check_merge
+from .merge import MergeActions
+from .merge import InfilesActions
+from .merge import InteractiveActions
 from .io.excel import ExcelReader
 from .io.excel import ExcelWriter
 from .io.text import TextReader
@@ -39,10 +38,12 @@ _logger = logging.getLogger(__name__)
 
 
 def parse_args(args):
-
-    if isinstance(args,list):
+    # Is parse_args being called as a console script, or as a subcommand?
+    if isinstance(args, list):
+        # console script? Create a new parser.
         parser = argparse.ArgumentParser(description=__doc__)
     else:
+        # subcommand? We've already created the necessary subcommand.
         parser = args
 
     parser.add_argument('infiles',
@@ -50,16 +51,17 @@ def parse_args(args):
                         help='Names of files to be merged.')
     parser.add_argument('-o', '--output',
                         help='Output file name.')
-    parser.add_argument('-m', '--mergedefault',
-                        default=abort_merge,
+    parser.add_argument('-m', '--merge-default',
+                        action=MergeActions,
+                        default='abort',
                         help='Default method to solve merge conflicts. '
-                             'Default: abort')
+                             'Options: abort, first, second, join, mean. Default: abort.')
     parser.add_argument('--interactive',
                         action='store_true',
                         help='Prompt user for input in case of conflict.')
     parser.add_argument('-s', '--sheetname',
                         help='Specify a default sheetname (Excel file).')
-    parser.add_argument('-f', '--oformat',
+    parser.add_argument('--ofmt',
                         help='Specify the format of the output file.')
     parser.add_argument('-q', '--quiet',
                         action='store_true',
@@ -83,29 +85,121 @@ def setup_logging(loglevel):
     logging.basicConfig(level=loglevel, stream=sys.stdout,
                         format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
 
+#
+# class DataframeMetadata:
+#     def __init__(self):
+#         self._filename = None
+#         self._ftype = None
+#         self._df = pd.DataFrame()
+#         self._sheetname = None
+#
+#     def __call__(self, filename, ftype, df, sheetname):
+#         self.set_filename(filename)
+#         self.set_ftype(ftype)
+#         self.set_dataframe(df)
+#         self.set_sheetname(sheetname)
+#
+#     def set_filename(self, filename):
+#         self._filename = filename
+#
+#     def set_ftype(self, ftype):
+#         self._ftype = ftype
+#
+#     def set_dataframe(self, df):
+#         self._df = df
+#
+#     def set_sheetname(self, sheetname):
+#         self._sheetname = sheetname
+#
+#     def get_filename(self):
+#         return self._filename()
+#
+#     def get_sheetname(self):
+#         return self._sheetname
+#
+#     def get_df(self):
+#         return self._df
+#
+#     def get_ftype(self):
+#         return self._ftype
 
-def abort_merge():
-    sys.exit(1)
+
+class Metadata:
+    filename = None
+    ftype = None
+    dataframe = pd.DataFrame()
+    sheetname = None
 
 
 def execute(args):
     """
-    Function: This is the function called when the merge.py is used in the terminal.
+    Function: This is the function called when the confluence_merge.py is used in the terminal.
     :param args: An array of files to be merged
     :return: None
     """
-    #args = parse_args(args)
+    args = parse_args(args)
+    args = get_infiles(args)
     args = check(args)
-    # This checks the parse_args function
-    set_global_variables(args)
-    # This sets all the default variables. A user might enter a default action for the program to do in case of a
-    # merge conflict (e.g. abort the merge, chose the value from the first file, let the user decide). These variables
-    # initialize to 'None' if no default action is specified.
-    file_df = create_df_of_all_infiles(args)
-    # This creates a large dataframe containing the file name, the corresponding dataframe, the file type, and the
-    # sheetname. This is the object that will be passed to the write function.
-    write(file_df, get_file(args.output, args.outputformat), args.outputformat)
-    # This function will write the dataframes to the output file.
+    metadatalist = get_metadata_list(args)
+    outfile = get_file(args.output, args.outputformat)
+    mergedlist = merge_metadatalist(args, metadatalist)
+    write(mergedlist, outfile, args.outputformat)
+
+
+def merge_metadatalist(args, metadatalist):
+    merged_list = []
+    sheetnames = list(dict.fromkeys([a.sheetname for a in metadatalist]))
+    for sheet in sheetnames:
+        metadata = Metadata()
+        metadatalist = [a for a in metadatalist if a.sheetname == sheet]
+        metadata.sheetname = sheet
+        metadata.df = merge_dataframes(args, metadatalist, sheet)
+        merged_list.append(metadata)
+    return merged_list
+
+
+def get_infiles(args):
+    """
+    Function: This takes the files from arg
+    :param args:
+    :return:
+    """
+    if args.input:
+        for ftype, filename in args.input:
+            Values = InfilesActions.Values()
+            Values.filename = filename
+            Values.ftype = ftype
+            args.infiles = args.infiles + [Values]
+        return args
+
+
+def get_metadata_list(args):
+    metadatalist = []
+    for file in args.infiles:
+        for sheet in get_sheetnames(args, file.filename, file.ftype):
+            metadata = Metadata()
+            metadata.filename = file.filename
+            metadata.ftype = file.ftype
+            metadata.dataframe = get_dataframe(args, file.filename, file.ftype, sheet)
+            metadata.sheetname = sheet
+            metadatalist.append(metadata)
+    return metadatalist
+
+
+
+def get_sheetnames(args, filename, ftype):
+    ftype = guess_file_type(filename) if ftype is None else ftype
+    return{
+        'xlsx': get_sheetnames_xlsx()
+    }.get(ftype, args.sheetname)
+
+
+def get_sheetnames_xlsx(filename):
+    try:
+        reader = ExcelReader(filename)
+        return reader.sheetnames()
+    except:
+        raise ValueError(f"'{filename}' has no sheets.")
 
 
 def merge_files(args, sheetname='Sheet1'):
@@ -115,14 +209,14 @@ def merge_files(args, sheetname='Sheet1'):
     :param args:
     :return:
     """
-    args = create_parser(args)
+    args = parse_args(args)
     file_df = create_df_of_all_infiles(args)
     file_df = file_df[file_df['sheetname'] == sheetname]
-    merged = merge_dataframes(file_df, sheetname)
+    merged = merge_dataframes(args, file_df, sheetname)
     return merged
 
 
-def merge_dataframes(file_df, sheetname):
+def merge_dataframes(args, metadatalist, sheetname):
     """
     Function: Takes the file dataframe (the big dataframe containing the filenames, corresponding dataframes, file
     type, and sheet names of each input file) and gets the merged dataframe. It does this in the following order:
@@ -136,14 +230,14 @@ def merge_dataframes(file_df, sheetname):
     :param sheetname: sheetname being merged
     :return: merged dataframe
     """
-    dfs = add_filename_columns_to_dfs(file_df)
-    df = compare_and_merge_multiple_dfs(dfs, sheetname)
+    dfs = add_filename_columns_to_dfs(metadatalist)
+    df = compare_and_merge_multiple_dfs(args, dfs, sheetname)
     df = drop_filename_column_from_df(df)
-    df = sort_values(df)
+    df = sort_values(args,df)
     return df
 
 
-def compare_and_merge_multiple_dfs(dfs, sheetname):
+def compare_and_merge_multiple_dfs(args, dfs, sheetname):
     """
     Function: takes a list of dataframes and merges them.
     :param dfs: list of dataframes
@@ -152,8 +246,8 @@ def compare_and_merge_multiple_dfs(dfs, sheetname):
     """
     mergedDf = create_empty_df()
     for df in dfs:
-        mergedDf = check_two_dfs_for_merge_conflict(mergedDf, df, sheetname)
-        mergedDf = fix_dataframe(mergedDf)
+        mergedDf = check_two_dfs_for_merge_conflict(args, mergedDf, df, sheetname)
+        mergedDf = fix_dataframe(args, mergedDf)
     return mergedDf
 
 
@@ -165,6 +259,7 @@ def get_list_of_dataframes_from_file_df(file_df):
     """
     dfs = list(file_df['dataframe'])
     return dfs
+
 
 def get_list_of_dataframes_from_file_df_by_specific_sheet(file_df, sheetname):
     """
@@ -178,7 +273,7 @@ def get_list_of_dataframes_from_file_df_by_specific_sheet(file_df, sheetname):
     return dfs
 
 
-def add_filename_columns_to_dfs(file_df):
+def add_filename_columns_to_dfs(metadatalist):
     """
     Function: Takes the individual dataframes from the file dataframe and their corresponding filenames and adds a
     filename column to the dataframe. Each row of each dataframe came from the same file, so the filename column will
@@ -186,9 +281,9 @@ def add_filename_columns_to_dfs(file_df):
     :param file_df:
     :return: list of dataframes with a filename column added to each
     """
-    dfs = get_list_of_dataframes_from_file_df(file_df)
-    filenames = list(file_df['filename'])
-    for i in range(len(file_df)):
+    dfs = [a.dataframe for a in metadatalist]
+    filenames = [a.filename for a in metadatalist]
+    for i in range(len(dfs)):
         dfs[i] = add_filename_column_to_single_df(dfs[i], filenames[i])
     return dfs
 
@@ -216,7 +311,7 @@ def add_filename_column_to_single_df(df, filename):
     return df
 
 
-def sort_values(df):
+def sort_values(args, df):
     """
     Function: Sorts values based on sample name column
     :param df: Unsorted dataframe
@@ -224,15 +319,14 @@ def sort_values(df):
     """
     if df.empty:
         return df
-    return df.sort_values([get_sample_name_column()]).reset_index(drop=True)
+    return df.sort_values([args.key]).reset_index(drop=True)
 
 
-def get_sample_name_column():
-    """
-    :return: name of the column being used as the sample name column.
-    """
-    return key
-
+# def args.key:
+#     """
+#     :return: name of the column being used as the sample name column.
+#     """
+#     return key
 
 
 def read(filename, ftype=None, sheetname=None):
@@ -259,7 +353,7 @@ def read(filename, ftype=None, sheetname=None):
         raise IOError(f"{ftype} is not a recognized file type.")
 
 
-def read_excel(filename, sheetname):
+def read_excel(filename, sheetname='Sheet1'):
     """
     function: reads excel files. This will return an instance of the ExcelReader that you can add '.as_dataframe()' to
     get the file as a dataframe
@@ -301,7 +395,7 @@ def read_csv(filename):
     return reader
 
 
-def write(file_df, outfile, outfiletype):
+def write(metadatalist, outfile, outfiletype):
     """
     Function: This is what writes the dataframes to the target file. It works by first determining what writer to use.
     If no outfiletype is specified, it guesses it based on the file extention. After it chooses the writer to use, it
@@ -321,12 +415,12 @@ def write(file_df, outfile, outfiletype):
             'csv': write_csv,
             'json': write_json,
             'pif': write_pif
-        }[outfiletype](file_df, outfile)
+        }[outfiletype](metadatalist, outfile)
     except KeyError:
         raise IOError(f"{outfiletype} is not a recognized file type.")
 
 
-def write_excel(file_df, outfile):
+def write_excel(metadatalist, outfile):
     """
     Function: This is the most complex writer because it is the only one with multiple different sheet names. The way
     it works is by first getting all the sheetnames that will have to be written to. Then, for each sheetname, it grabs
@@ -337,18 +431,15 @@ def write_excel(file_df, outfile):
     :return: none
     """
     writer = ExcelWriter(outfile)
-    sheets = get_sheetnames_from_file_df(file_df)
-    for sheet in sheets:
-        df_same_sheet = file_df[file_df['sheetname'] == sheet]
-        merged_df = merge_dataframes(df_same_sheet, sheet)
-        if merged_df.empty:
-            writer.write_empty_df(merged_df, sheet)
+    for metadata in metadatalist:
+        if metadata.dataframe.empty:
+            writer.write_empty_df(metadata.dataframe, metadata.sheetname)
         else:
-            writer.write(merged_df, sheet)
+            writer.write(metadata.dataframe, metadata.sheetname)
     writer.save_and_close()
 
 
-def write_text(file_df, outfile, delimiter=' '):
+def write_text(metadatalist, outfile, delimiter=' '):
     """
     Function: Writes the dataframe to a text file. If multiple sheetnames are present, it creates a directory and
     populates that directory with each merged dataframe. Otherwise, it just writes to one file.
@@ -357,22 +448,23 @@ def write_text(file_df, outfile, delimiter=' '):
     :param delimiter: delimiter
     :return: Nothing
     """
-    sheets = get_sheetnames_from_file_df(file_df)
-    if len(sheets) == 1:
+    if len(metadatalist) == 1:
         writer = TextWriter(outfile, delimiter=delimiter)
-        writer.write(merge_dataframes(file_df, sheets[0]))
+        writer.write(metadatalist[0].dataframe)
     else:
         folder = os.path.splitext(outfile)[0]
-        create_directory(folder)
-        for sheet in sheets:
-            modifiedOutfile = folder + '/' + sheet + '_' + outfile
-            writer = TextWriter(modifiedOutfile)
-            df_same_sheet = file_df[file_df['sheetname'] == sheet]
-            merged_df = merge_dataframes(df_same_sheet, sheet)
-            writer.write(merged_df)
+        try:
+            create_directory(folder)
+            for metadata in metadatalist:
+                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
+                writer = TextWriter(modifiedOutfile)
+                writer.write(metadata.dataframe)
+        except FileExistsError:
+            raise FileExistsError(f"Directory '{folder}' already exists")
 
 
-def write_json(file_df, outfile):
+
+def write_json(metadatalist, outfile):
     """
         Function: Writes the dataframe to a JSON file. If multiple sheetnames are present, it creates a directory and
         populates that directory with each merged dataframe. Otherwise, it just writes to one file.
@@ -381,22 +473,22 @@ def write_json(file_df, outfile):
         :param delimiter: delimiter
         :return: Nothing
         """
-    sheets = get_sheetnames_from_file_df(file_df)
-    if len(sheets) == 1:
+    if len(metadatalist) == 1:
         writer = JSONWriter(outfile)
-        writer.write(merge_dataframes(file_df, sheets[0]))
+        writer.write(metadatalist[0].dataframe)
     else:
         folder = os.path.splitext(outfile)[0]
-        create_directory(folder)
-        for sheet in sheets:
-            modifiedOutfile = folder + '/' + sheet + '_' + outfile
-            writer = JSONWriter(modifiedOutfile)
-            df_same_sheet = file_df[file_df['sheetname'] == sheet]
-            merged_df = merge_dataframes(df_same_sheet, sheet)
-            writer.write(merged_df)
+        try:
+            create_directory(folder)
+            for metadata in metadatalist:
+                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
+                writer = JSONWriter(modifiedOutfile)
+                writer.write(metadata.dataframe)
+        except FileExistsError:
+            raise FileExistsError(f"Directory '{folder}' already exists")
 
 
-def write_csv(file_df, outfile):
+def write_csv(metadatalist, outfile):
     """
         Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
         populates that directory with each merged dataframe. Otherwise, it just writes to one file.
@@ -405,22 +497,22 @@ def write_csv(file_df, outfile):
         :param delimiter: delimiter
         :return: Nothing
         """
-    sheets = get_sheetnames_from_file_df(file_df)
-    if len(sheets) == 1:
+    if len(metadatalist) == 1:
         writer = CSVWriter(outfile)
-        writer.write(merge_dataframes(file_df, sheets[0]))
+        writer.write(metadatalist[0].dataframe)
     else:
         folder = os.path.splitext(outfile)[0]
-        create_directory(folder)
-        for sheet in sheets:
-            modifiedOutfile = folder + '/' + sheet + '_' + outfile
-            writer = CSVWriter(modifiedOutfile)
-            df_same_sheet = file_df[file_df['sheetname'] == sheet]
-            merged_df = merge_dataframes(df_same_sheet, sheet)
-            writer.write(merged_df)
+        try:
+            create_directory(folder)
+            for metadata in metadatalist:
+                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
+                writer = CSVWriter(modifiedOutfile)
+                writer.write(metadata.dataframe)
+        except FileExistsError:
+            raise FileExistsError(f"Directory '{folder}' already exists")
 
 
-def write_pif(file_df, outfile):
+def write_pif(metadatalist, outfile):
     """
         Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
         populates that directory with each merged dataframe. Otherwise, it just writes to one file.
@@ -429,19 +521,19 @@ def write_pif(file_df, outfile):
         :param delimiter: delimiter
         :return: Nothing
         """
-    sheets = get_sheetnames_from_file_df(file_df)
-    if len(sheets) == 1:
+    if len(metadatalist) == 1:
         writer = PifWriter(outfile)
-        writer.write(merge_dataframes(file_df, sheets[0]))
+        writer.write(metadatalist[0].dataframe)
     else:
         folder = os.path.splitext(outfile)[0]
-        create_directory(folder)
-        for sheet in sheets:
-            modifiedOutfile = folder + '/' + sheet + '_' + outfile
-            writer = PifWriter(modifiedOutfile)
-            df_same_sheet = file_df[file_df['sheetname'] == sheet]
-            merged_df = merge_dataframes(df_same_sheet, sheet)
-            writer.write(merged_df)
+        try:
+            create_directory(folder)
+            for metadata in metadatalist:
+                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
+                writer = PifWriter(modifiedOutfile)
+                writer.write(metadata.dataframe)
+        except FileExistsError:
+            raise FileExistsError(f"Directory '{folder}' already exists")
 
 
 def create_directory(folderName):
@@ -479,11 +571,11 @@ def guess_file_type(filename):
     return os.path.splitext(filename)[1].strip('.')
 
 
-def check_two_dfs_for_merge_conflict(leftDataframe, rightDataframe, sheetname):
+def check_two_dfs_for_merge_conflict(args, leftDataframe, rightDataframe, sheetname):
     df = join_two_dataframes(leftDataframe, rightDataframe)
-    duplicates = find_duplicate_sample_names(df)
+    duplicates = find_duplicate_sample_names(args, df)
     for name in duplicates:
-        temp = df[df[get_sample_name_column()] == name]
+        temp = df[df[args.key] == name]
         for column in temp.loc[:, temp.columns != 'Filename']:
             # This for loop iterates through each of the columns in the temporary dataframe to check how many
             # unique entries are in each. If the answer is more than one, it calls the 'make_user_choose_two_files'
@@ -493,22 +585,32 @@ def check_two_dfs_for_merge_conflict(leftDataframe, rightDataframe, sheetname):
                 # The above if statement checks if there is more than one unique value per column. If the global default
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
-                choice = make_user_choose_between_two_files(temp[column].values,
-                                                            temp['Filename'].values[0],
-                                                            temp['Filename'].values[1],
-                                                            column,
-                                                            temp[get_sample_name_column()].values[0],
-                                                            sheetname)
-                df.at[df[get_sample_name_column()] == name, column] = choice
-                # Fix this later
+                # choice = make_user_choose_between_two_files(temp[column].values,
+                #                                             temp['Filename'].values[0],
+                #                                             temp['Filename'].values[1],
+                #                                             column,
+                #                                             temp[args.key].values[0],
+                #                                             sheetname)
+                if args.interactive:
+                    merger = InteractiveActions()
+                    df.at[df[args.key] == name, column] = merger(temp['Filename'].values[0],
+                                                                                 temp['Filename'].values[1],
+                                                                                 sheetname,
+                                                                                 temp[args.key].values[0],
+                                                                                 column,
+                                                                                 temp[column].values[0],
+                                                                                 temp[column].values[1])
+                merger = MergeActions()
+                df.at[df[args.key] == name, column] = merger(temp[column].values[0],
+                                                                             temp[column].values[1])
     return df
 
 
-def find_duplicate_sample_names(df):
+def find_duplicate_sample_names(args, df):
     if df.empty:
         return []
     else:
-        column = get_sample_name_column()
+        column = args.key
         # Selects the column we want to search
         duplicated_names = df[[column]].duplicated(keep='last')
         # Goes through the column and identifies whether or not each name has been repeated. If we had:
@@ -531,7 +633,7 @@ def find_duplicate_sample_names(df):
         # turns it into a list. It drops any duplicates.
 
 
-def check_for_sample_name_completeness(df, filename, sheetname, ftype):
+def check_for_sample_name_completeness(args, df, filename, sheetname, ftype):
     """
     Function: Checks the first column for empty cells. If there is an empty cell, throw an error. Otherwise, return
     the original dataframe
@@ -547,14 +649,14 @@ def check_for_sample_name_completeness(df, filename, sheetname, ftype):
     """
     #try:
     for i in range(len(df)):
-        if pd.isna(list(df[get_sample_name_column()])[i]) is True:
+        if pd.isna(list(df[args.key])[i]) is True:
             raise IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
     return df
     #except IOError:
     #    IOError(f"Empty cell in sample name in row {i + 1} in file {filename} in sheet {sheetname}")
 
 
-def check_for_sample_name_uniqueness(df, filename, sheetname, ftype):
+def check_for_sample_name_uniqueness(args, df, filename, sheetname, ftype):
     """
     Functionality: Makes sure there are no repeated sample names, similar to the 'check_for_merge_conflict' function
     :param df: dataframe to check
@@ -563,9 +665,9 @@ def check_for_sample_name_uniqueness(df, filename, sheetname, ftype):
     :param column: column that is being checked
     :return: fixed dataframe
     """
-    duplicates = find_duplicate_sample_names(df)
+    duplicates = find_duplicate_sample_names(args, df)
     for name in duplicates:
-        temp = df[df[get_sample_name_column()] == name]
+        temp = df[df[args.key] == name]
         for column in temp:
             instances = temp[column].nunique()
             if instances > 1:
@@ -574,8 +676,8 @@ def check_for_sample_name_uniqueness(df, filename, sheetname, ftype):
                 #                                           column,
                 #                                           filename,
                 #                                           sheetname,
-                #                                           temp[get_sample_name_column()].values[0])
-                # df.loc[df[get_sample_name_column()] == name, column] = choice
+                #                                           temp[args.key].values[0])
+                # df.loc[df[args.key] == name, column] = choice
                 # raise ValueError(f'Conflicting values found within file {filename} ' +
                 #                  (f'in sheet {sheetname}' if ftype == 'xlsx' else '') +
                 #                  (f'under column {column}' )+
@@ -585,13 +687,13 @@ def check_for_sample_name_uniqueness(df, filename, sheetname, ftype):
                                                  column,
                                                  filename,
                                                  sheetname,
-                                                 temp[get_sample_name_column()].values[0],
+                                                 temp[args.key].values[0],
                                                  ftype)
-    return fix_dataframe(df)
+    return fix_dataframe(args, df)
 
 
-def check_sample_name_is_represented_in_dataframe(df, filename, sheetname, ftype):
-    sampleName = get_sample_name_column()
+def check_sample_name_is_represented_in_dataframe(args, df, filename, sheetname, ftype):
+    sampleName = args.key
     if sampleName not in df.columns:
         errorMessage = ((f"The sample name '{sampleName}' is not a column name in file '{filename}' ") +
                         (f"within sheet '{sheetname}'." if ftype == 'xlsx' else '.'))
@@ -703,7 +805,7 @@ def check_if_nan(df):
         return np.NaN
 
 
-def combiner(df):
+def combiner(args, df):
     """
     Function: Takes a dataframe with several different rows, but in each column there is no more than
     1 non-NaN value. It substitues all NaN values with this value, if possible, otherwise it leaves it as
@@ -711,11 +813,11 @@ def combiner(df):
     :param df: dataframe being combined
     :return: corrected dataframe
     """
-    df_valid = df.groupby(by=get_sample_name_column()).agg(dict.fromkeys(df.columns[0:], check_if_nan))
+    df_valid = df.groupby(by=args.key).agg(dict.fromkeys(df.columns[0:], check_if_nan))
     return df_valid
 
 
-def fix_dataframe(df):
+def fix_dataframe(args, df):
     """
     Function: Takes a dataframe with several identical sample name entries and fixes it, merging rows were applicable.
     Here's how it works. It goes through the first column of the dataframe and creates an array of all the repeated
@@ -729,15 +831,15 @@ def fix_dataframe(df):
     if df.empty:
         return df
     combined = create_empty_df()
-    duplicates = find_duplicate_sample_names(df)
+    duplicates = find_duplicate_sample_names(args, df)
     # creates an array of all the repeated sample names
     for repeatedName in duplicates:
-        temp = df[df[get_sample_name_column()] == repeatedName]
+        temp = df[df[args.key] == repeatedName]
         # creates a temporary dataframe with only the rows with the repeated name
-        combined = join_two_dataframes(combined, combiner(temp))
+        combined = join_two_dataframes(combined, combiner(args, temp))
         # There might be several different repeated names. There will be one row for each fixed name, so 'combined'
         # will contain each of these rows. 'Combiner' will be the function that merges the rows.
-    dfWithoutDuplicates = df.drop_duplicates(subset=[get_sample_name_column()], keep=False)
+    dfWithoutDuplicates = df.drop_duplicates(subset=[args.key], keep=False)
     # Deletes all repeated rows from the original dataframe
     return join_two_dataframes(dfWithoutDuplicates, combined)
 
@@ -860,8 +962,8 @@ def create_df_of_all_infiles(args):
     # Creates an array of each row of the file dataframe. It calls the function 'create_file_df()' and gives it the
     # file name and guesses the file type.
     df_rows_from_args_input = [file_df_row(file, ftype) for ftype, file in args.input] if args.input else []
-    files = join_many_dataframes(df_rows_from_args_input + df_rows_from_args_infile)
-    return files
+    file_df = join_many_dataframes(df_rows_from_args_input + df_rows_from_args_infile)
+    return file_df
 
 
 def setup_validator():
@@ -947,12 +1049,12 @@ def file_df_row(filename, ftype):
     return file_df
 
 
-def get_dataframe(filename, ftype, sheetname):
+def get_dataframe(args, filename, ftype, sheetname):
     validate = setup_validator()
     # Look under the setup_validator function, I explain how the validator works.
     df = read(filename, ftype, sheetname).as_dataframe()
     if not df.empty:
-        df = validate(df, filename, sheetname, ftype)
+        df = validate(args, df, filename, sheetname, ftype)
     return df
 
 
@@ -972,22 +1074,22 @@ def find_default_action(args):
     return default
 
 
-def create_parser(args):
-    """
-    function: set up a parser with all the args the user passes to the function
-    :return: parser containing all the args
-    """
-    parser = argparse.ArgumentParser(description='parse arguments')
-    parser.add_argument('infiles', nargs='*', help='input file name with no file type')
-    parser.add_argument('-o', '--output', help='output file name')
-    parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
-    parser.add_argument('-m', '--mergedefault', help='default solution to merge conflicts')
-    parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
-    parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
-    parser.add_argument('--outputformat', help='specify output file type')
-    parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
-    parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
-    return parser.parse_args(args)
+# def create_parser(args):
+#     """
+#     function: set up a parser with all the args the user passes to the function
+#     :return: parser containing all the args
+#     """
+#     parser = argparse.ArgumentParser(description='parse arguments')
+#     parser.add_argument('infiles', nargs='*', help='input file name with no file type')
+#     parser.add_argument('-o', '--output', help='output file name')
+#     parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
+#     parser.add_argument('-m', '--mergedefault', help='default solution to merge conflicts')
+#     parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
+#     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
+#     parser.add_argument('--outputformat', help='specify output file type')
+#     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
+#     parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
+#     return parser.parse_args(args)
 
 
 def set_global_variables(args=None, Default='abort', TxtSheetname='Sheet1', Key='Sample Name'):

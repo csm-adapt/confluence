@@ -100,7 +100,7 @@ def list_duplicates_for_other_file_types(filename, duplicateList):
 if __name__ == "__main__":
     list_items(sys.argv[1:])
 
-#todo: pass key name into merge.py
+#todo: pass key name into confluence_merge.py
 #todo: make it so you can pass empty dataframes to list duplicates
 
 #todo: make an error message that tells the user there is no sample name

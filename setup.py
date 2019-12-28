@@ -10,7 +10,7 @@
 """
 import sys
 
-from pkg_resources import require, VersionConflict
+# from pkg_resources import require, VersionConflict
 from setuptools import setup, find_packages
 
 # try:
@@ -25,10 +25,10 @@ setup(
     packages = find_packages(),
     entry_points={
         'console_scripts': [
-            'confluence = src.confluence.confluence:main',
-            'confluence-merge = src.confluence.merge.main'
+            'confluence = src.confluence.confluence:run',
+            'confluence-merge = src.confluence.confluence_merge:run'
         ],
-    },
+    }
 )
 
 # if __name__ == "__main__":
