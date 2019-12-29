@@ -100,8 +100,9 @@ class InfilesActions(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         valuelist = []
         for value in values:
-            self.Values.filename = value
-            valuelist.append(self.Values)
+            Values = self.Values()
+            Values.filename = value
+            valuelist.append(Values)
         setattr(namespace, self.dest, valuelist)
 
     @staticmethod

@@ -48,10 +48,12 @@ def parse_args(args):
 
     parser.add_argument('infiles',
                         nargs='*',
-                        help='Names of files to be merged.')
+                        help='Names of files to be merged.',
+                        action=InfilesActions)
+    parser.add_argument('-i', '--input', nargs=2, action='append')
     parser.add_argument('-o', '--output',
                         help='Output file name.')
-    parser.add_argument('-m', '--merge-default',
+    parser.add_argument('-m', '--mergedefault',
                         action=MergeActions,
                         default='abort',
                         help='Default method to solve merge conflicts. '
@@ -149,11 +151,12 @@ def execute(args):
 def merge_metadatalist(args, metadatalist):
     merged_list = []
     sheetnames = list(dict.fromkeys([a.sheetname for a in metadatalist]))
+    print('sheetnames', sheetnames)
     for sheet in sheetnames:
         metadata = Metadata()
         metadatalist = [a for a in metadatalist if a.sheetname == sheet]
         metadata.sheetname = sheet
-        metadata.df = merge_dataframes(args, metadatalist, sheet)
+        metadata.dataframe = merge_dataframes(args, metadatalist, sheet)
         merged_list.append(metadata)
     return merged_list
 
@@ -164,13 +167,14 @@ def get_infiles(args):
     :param args:
     :return:
     """
+    print('infiles', args.infiles)
     if args.input:
         for ftype, filename in args.input:
             Values = InfilesActions.Values()
             Values.filename = filename
             Values.ftype = ftype
             args.infiles = args.infiles + [Values]
-        return args
+    return args
 
 
 def get_metadata_list(args):
@@ -189,10 +193,14 @@ def get_metadata_list(args):
 
 def get_sheetnames(args, filename, ftype):
     ftype = guess_file_type(filename) if ftype is None else ftype
-    return{
-        'xlsx': get_sheetnames_xlsx()
-    }.get(ftype, args.sheetname)
-
+    print(ftype)
+    # return{
+    #     'xlsx': get_sheetnames_xlsx(filename)
+    # }.get(ftype, args.sheetname)
+    if ftype == 'xlsx':
+        print(ftype)
+        return get_sheetnames_xlsx(filename)
+    return [args.sheetname]
 
 def get_sheetnames_xlsx(filename):
     try:
@@ -202,18 +210,26 @@ def get_sheetnames_xlsx(filename):
         raise ValueError(f"'{filename}' has no sheets.")
 
 
-def merge_files(args, sheetname='Sheet1'):
+def merge_files(args):
     """
     Function: This does the same thing as 'run()' but instead of writing the dataframes to a file, it returns the
     dataframe.
     :param args:
     :return:
     """
+    print(args)
     args = parse_args(args)
-    file_df = create_df_of_all_infiles(args)
-    file_df = file_df[file_df['sheetname'] == sheetname]
-    merged = merge_dataframes(args, file_df, sheetname)
-    return merged
+    for arg in args.infiles:
+        print(arg.filename)
+    args = get_infiles(args)
+    for arg in args.infiles:
+        print(arg.filename)
+    # args = check(args)
+    metadatalist = get_metadata_list(args)
+    print(metadatalist[0].dataframe)#, metadatalist[1].dataframe)
+    mergedlist = merge_metadatalist(args, metadatalist)
+    print(mergedlist[0])
+    return mergedlist[0].dataframe
 
 
 def merge_dataframes(args, metadatalist, sheetname):
@@ -233,7 +249,7 @@ def merge_dataframes(args, metadatalist, sheetname):
     dfs = add_filename_columns_to_dfs(metadatalist)
     df = compare_and_merge_multiple_dfs(args, dfs, sheetname)
     df = drop_filename_column_from_df(df)
-    df = sort_values(args,df)
+    df = sort_values(args, df)
     return df
 
 
@@ -343,12 +359,20 @@ def read(filename, ftype=None, sheetname=None):
     if ftype is None:
         ftype = guess_file_type(filename)
     try:
+        print('ftype:', ftype)
+        dct = {'txt': 'text',
+               'xlsx': 'excel'}
+        # print({
+        #     'txt': read_text(filename),
+        #     's': read_excl(filename, sheetname),
+        #     'csv': read_csv(filename),
+        # }[ftype])
         return {
-            'xlsx': read_excel(filename, sheetname),
-            'txt': read_text(filename),
-            'csv': read_csv(filename),
-            'json': read_json(filename)
-        }[ftype]
+            'txt': read_text,
+            'xlsx': read_excel,
+            'csv': read_csv,
+            'json': read_json
+        }[ftype](filename, sheetname)
     except KeyError:
         raise IOError(f"{ftype} is not a recognized file type.")
 
@@ -361,11 +385,12 @@ def read_excel(filename, sheetname='Sheet1'):
     :param sheet: name of the sheet
     :return: reader object for a specific sheet name
     """
+    print('filename excel', filename)
     reader = ExcelReader(filename, sheetname=sheetname)
     return reader
 
 
-def read_text(filename):
+def read_text(filename, sheetname):
     """
     Function: reads txt files
     :param filename: Name of the file
@@ -385,7 +410,7 @@ def read_json(filename):
     return reader
 
 
-def read_csv(filename):
+def read_csv(filename, sheetname):
     """
     Function: reads csv files
     :param filename: file name
@@ -600,7 +625,7 @@ def check_two_dfs_for_merge_conflict(args, leftDataframe, rightDataframe, sheetn
                                                                                  column,
                                                                                  temp[column].values[0],
                                                                                  temp[column].values[1])
-                merger = MergeActions()
+                merger = args.mergedefault
                 df.at[df[args.key] == name, column] = merger(temp[column].values[0],
                                                                              temp[column].values[1])
     return df
@@ -870,17 +895,17 @@ def take_keyword(input, values):
     return selectedIndex
 
 
-def get_sheetnames(file):
-    """
-    Function: Takes an array of excel files and finds the sheetnames of all of them. Then it eliminates the duplicates
-    and returns a list of each sheetname.
-    :param files: all the files being accessed
-    :return: a list of every sheet name that is being used
-    """
-    arr = ExcelReader(file).sheetnames()
-    return list(dict.fromkeys(arr))
-    # Eliminates duplicate names while still preserving order. That is because when creating a dictionary, python
-    # automatically gets rid of duplicate keys.
+# def get_sheetnames(file):
+#     """
+#     Function: Takes an array of excel files and finds the sheetnames of all of them. Then it eliminates the duplicates
+#     and returns a list of each sheetname.
+#     :param files: all the files being accessed
+#     :return: a list of every sheet name that is being used
+#     """
+#     arr = ExcelReader(file).sheetnames()
+#     return list(dict.fromkeys(arr))
+#     # Eliminates duplicate names while still preserving order. That is because when creating a dictionary, python
+#     # automatically gets rid of duplicate keys.
 
 
 def get_sheetnames_from_file_df(file_df):
@@ -1145,4 +1170,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    execute()
