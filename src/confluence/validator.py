@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class QMDataFrameValidator(object):
     def __init__(self):
         self._callbacks = []
@@ -10,6 +11,6 @@ class QMDataFrameValidator(object):
         return df
 
     def add_callback(self, func):
-        #if not hasattr('__call__', func):
-            #raise ValueError("Callback functions must have a ‘__call__’ attribute.")
         self._callbacks.append(func)
+
+

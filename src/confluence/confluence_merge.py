@@ -12,20 +12,11 @@ import argparse
 import logging
 import pandas as pd
 import numpy as np
-import inspect
-from itertools import product
 from .merge import MergeActions
 from .merge import InfilesActions
 from .merge import InteractiveActions
-from .io.excel import ExcelReader
-from .io.excel import ExcelWriter
-from .io.text import TextReader
-from .io.text import TextWriter
-from .io.JSON import JSONReader
-from .io.JSON import JSONWriter
-from .io.CSV import CSVReader
-from .io.CSV import CSVWriter
-from .io.pif import PifWriter
+from .io import read
+from .io import write
 from .validator import QMDataFrameValidator
 from .check_args import check
 
@@ -55,7 +46,7 @@ def parse_args(args):
                         help='Output file name.')
     parser.add_argument('-m', '--mergedefault',
                         action=MergeActions,
-                        default='abort',
+                        default=MergeActions.abort,
                         help='Default method to solve merge conflicts. '
                              'Options: abort, first, second, join, mean. Default: abort.')
     parser.add_argument('--interactive',
@@ -87,44 +78,6 @@ def setup_logging(loglevel):
     logging.basicConfig(level=loglevel, stream=sys.stdout,
                         format=logformat, datefmt="%Y-%m-%d %H:%M:%S")
 
-#
-# class DataframeMetadata:
-#     def __init__(self):
-#         self._filename = None
-#         self._ftype = None
-#         self._df = pd.DataFrame()
-#         self._sheetname = None
-#
-#     def __call__(self, filename, ftype, df, sheetname):
-#         self.set_filename(filename)
-#         self.set_ftype(ftype)
-#         self.set_dataframe(df)
-#         self.set_sheetname(sheetname)
-#
-#     def set_filename(self, filename):
-#         self._filename = filename
-#
-#     def set_ftype(self, ftype):
-#         self._ftype = ftype
-#
-#     def set_dataframe(self, df):
-#         self._df = df
-#
-#     def set_sheetname(self, sheetname):
-#         self._sheetname = sheetname
-#
-#     def get_filename(self):
-#         return self._filename()
-#
-#     def get_sheetname(self):
-#         return self._sheetname
-#
-#     def get_df(self):
-#         return self._df
-#
-#     def get_ftype(self):
-#         return self._ftype
-
 
 class Metadata:
     filename = None
@@ -143,15 +96,14 @@ def execute(args):
     args = get_infiles(args)
     args = check(args)
     metadatalist = get_metadata_list(args)
-    outfile = get_file(args.output, args.outputformat)
+    outfile = get_file(args.output, args.ofmt)
     mergedlist = merge_metadatalist(args, metadatalist)
-    write(mergedlist, outfile, args.outputformat)
+    write(mergedlist, outfile, args.ofmt)
 
 
 def merge_metadatalist(args, metadatalist):
     merged_list = []
     sheetnames = list(dict.fromkeys([a.sheetname for a in metadatalist]))
-    print('sheetnames', sheetnames)
     for sheet in sheetnames:
         metadata = Metadata()
         metadatalist = [a for a in metadatalist if a.sheetname == sheet]
@@ -167,7 +119,6 @@ def get_infiles(args):
     :param args:
     :return:
     """
-    print('infiles', args.infiles)
     if args.input:
         for ftype, filename in args.input:
             Values = InfilesActions.Values()
@@ -190,21 +141,16 @@ def get_metadata_list(args):
     return metadatalist
 
 
-
 def get_sheetnames(args, filename, ftype):
     ftype = guess_file_type(filename) if ftype is None else ftype
-    print(ftype)
-    # return{
-    #     'xlsx': get_sheetnames_xlsx(filename)
-    # }.get(ftype, args.sheetname)
     if ftype == 'xlsx':
-        print(ftype)
         return get_sheetnames_xlsx(filename)
     return [args.sheetname]
 
+
 def get_sheetnames_xlsx(filename):
     try:
-        reader = ExcelReader(filename)
+        reader = read(filename)
         return reader.sheetnames()
     except:
         raise ValueError(f"'{filename}' has no sheets.")
@@ -212,23 +158,15 @@ def get_sheetnames_xlsx(filename):
 
 def merge_files(args):
     """
-    Function: This does the same thing as 'run()' but instead of writing the dataframes to a file, it returns the
+    Function: This does the same thing as 'execute()' but instead of writing the dataframes to a file, it returns the
     dataframe.
     :param args:
     :return:
     """
-    print(args)
     args = parse_args(args)
-    for arg in args.infiles:
-        print(arg.filename)
     args = get_infiles(args)
-    for arg in args.infiles:
-        print(arg.filename)
-    # args = check(args)
     metadatalist = get_metadata_list(args)
-    print(metadatalist[0].dataframe)#, metadatalist[1].dataframe)
     mergedlist = merge_metadatalist(args, metadatalist)
-    print(mergedlist[0])
     return mergedlist[0].dataframe
 
 
@@ -267,28 +205,6 @@ def compare_and_merge_multiple_dfs(args, dfs, sheetname):
     return mergedDf
 
 
-def get_list_of_dataframes_from_file_df(file_df):
-    """
-    Function: takes the file dataframe and gets the 'dataframe' column, then converts it to a list
-    :param file_df: file dataframe
-    :return: list of dataframes
-    """
-    dfs = list(file_df['dataframe'])
-    return dfs
-
-
-def get_list_of_dataframes_from_file_df_by_specific_sheet(file_df, sheetname):
-    """
-    Function: Takes the file dataframe and returns a list of dataframes that have a specified sheetname
-    :param file_df: file dataframe
-    :param sheetname: Sheetname to be used
-    :return: List of dataframes from the same sheetname
-    """
-    df_same_sheet = file_df[file_df['sheetname'] == sheetname]
-    dfs = get_list_of_dataframes_from_file_df(df_same_sheet)
-    return dfs
-
-
 def add_filename_columns_to_dfs(metadatalist):
     """
     Function: Takes the individual dataframes from the file dataframe and their corresponding filenames and adds a
@@ -297,8 +213,8 @@ def add_filename_columns_to_dfs(metadatalist):
     :param file_df:
     :return: list of dataframes with a filename column added to each
     """
-    dfs = [a.dataframe for a in metadatalist]
-    filenames = [a.filename for a in metadatalist]
+    dfs = [obj.dataframe for obj in metadatalist]
+    filenames = [obj.filename for obj in metadatalist]
     for i in range(len(dfs)):
         dfs[i] = add_filename_column_to_single_df(dfs[i], filenames[i])
     return dfs
@@ -310,7 +226,7 @@ def drop_filename_column_from_df(df):
     :param df: dataframe with a filename column
     :return: dataframe without a filename column
     """
-    df = df.drop('Filename', axis=1)
+    df = df.drop(['Filename'], axis=1)
     return df
 
 
@@ -338,227 +254,14 @@ def sort_values(args, df):
     return df.sort_values([args.key]).reset_index(drop=True)
 
 
-# def args.key:
-#     """
-#     :return: name of the column being used as the sample name column.
-#     """
-#     return key
 
 
-def read(filename, ftype=None, sheetname=None):
+def guess_file_type(filename):
     """
-    Function: This is the function we call when we want to read an unknown file. It first takes in the file name
-    and file type. If the file type is 'None', it guesses the type based on the file extention. Each file type has an
-    accompanying function that contains the reader for that file type (read_excel(), etc.).
-
-    :param filename: name of file
-    :param ftype: the type of the file ('xlsx', 'txt', etc)
-    :param sheetname: name of the sheet being read. This only applies to .xlsx files
-    :return: appropriate file reader
-    """
-    if ftype is None:
-        ftype = guess_file_type(filename)
-    try:
-        print('ftype:', ftype)
-        dct = {'txt': 'text',
-               'xlsx': 'excel'}
-        # print({
-        #     'txt': read_text(filename),
-        #     's': read_excl(filename, sheetname),
-        #     'csv': read_csv(filename),
-        # }[ftype])
-        return {
-            'txt': read_text,
-            'xlsx': read_excel,
-            'csv': read_csv,
-            'json': read_json
-        }[ftype](filename, sheetname)
-    except KeyError:
-        raise IOError(f"{ftype} is not a recognized file type.")
-
-
-def read_excel(filename, sheetname='Sheet1'):
-    """
-    function: reads excel files. This will return an instance of the ExcelReader that you can add '.as_dataframe()' to
-    get the file as a dataframe
-    :param filename: file name to be read
-    :param sheet: name of the sheet
-    :return: reader object for a specific sheet name
-    """
-    print('filename excel', filename)
-    reader = ExcelReader(filename, sheetname=sheetname)
-    return reader
-
-
-def read_text(filename, sheetname):
-    """
-    Function: reads txt files
-    :param filename: Name of the file
-    :return: reader object
-    """
-    reader = TextReader(filename)
-    return reader
-
-
-def read_json(filename):
-    """
-    Function: Reads JSON files
     :param filename: name of the file
-    :return: reader object
+    :return: the file handle that presumably tells the type of the file
     """
-    reader = JSONReader(filename)
-    return reader
-
-
-def read_csv(filename, sheetname):
-    """
-    Function: reads csv files
-    :param filename: file name
-    :return: csv reader object
-    """
-    reader = CSVReader(filename)
-    return reader
-
-
-def write(metadatalist, outfile, outfiletype):
-    """
-    Function: This is what writes the dataframes to the target file. It works by first determining what writer to use.
-    If no outfiletype is specified, it guesses it based on the file extention. After it chooses the writer to use, it
-    passes along the file_df to it.
-
-    :param file_df: dataframe with all the files and their metadata
-    :param outfile: output file to write to
-    :param outfiletype: type of file
-    :return: appropriate reader for writing
-    """
-    if outfiletype is None:
-        outfiletype = guess_file_type(outfile)
-    try:
-        return {
-            'xlsx': write_excel,
-            'txt': write_text,
-            'csv': write_csv,
-            'json': write_json,
-            'pif': write_pif
-        }[outfiletype](metadatalist, outfile)
-    except KeyError:
-        raise IOError(f"{outfiletype} is not a recognized file type.")
-
-
-def write_excel(metadatalist, outfile):
-    """
-    Function: This is the most complex writer because it is the only one with multiple different sheet names. The way
-    it works is by first getting all the sheetnames that will have to be written to. Then, for each sheetname, it grabs
-    the dataframes in the file dataframe with said sheetname, merges them, then writes to the file. After all sheetnames
-    are satisfied, it saves and closes the file.
-    :param files: A dictionary of filenames and their corresponding tile types
-    :param outfile: The output file to write to
-    :return: none
-    """
-    writer = ExcelWriter(outfile)
-    for metadata in metadatalist:
-        if metadata.dataframe.empty:
-            writer.write_empty_df(metadata.dataframe, metadata.sheetname)
-        else:
-            writer.write(metadata.dataframe, metadata.sheetname)
-    writer.save_and_close()
-
-
-def write_text(metadatalist, outfile, delimiter=' '):
-    """
-    Function: Writes the dataframe to a text file. If multiple sheetnames are present, it creates a directory and
-    populates that directory with each merged dataframe. Otherwise, it just writes to one file.
-    :param file_df: File dataframe
-    :param outfile: file name to write to
-    :param delimiter: delimiter
-    :return: Nothing
-    """
-    if len(metadatalist) == 1:
-        writer = TextWriter(outfile, delimiter=delimiter)
-        writer.write(metadatalist[0].dataframe)
-    else:
-        folder = os.path.splitext(outfile)[0]
-        try:
-            create_directory(folder)
-            for metadata in metadatalist:
-                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
-                writer = TextWriter(modifiedOutfile)
-                writer.write(metadata.dataframe)
-        except FileExistsError:
-            raise FileExistsError(f"Directory '{folder}' already exists")
-
-
-
-def write_json(metadatalist, outfile):
-    """
-        Function: Writes the dataframe to a JSON file. If multiple sheetnames are present, it creates a directory and
-        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
-        :param file_df: File dataframe
-        :param outfile: file name to write to
-        :param delimiter: delimiter
-        :return: Nothing
-        """
-    if len(metadatalist) == 1:
-        writer = JSONWriter(outfile)
-        writer.write(metadatalist[0].dataframe)
-    else:
-        folder = os.path.splitext(outfile)[0]
-        try:
-            create_directory(folder)
-            for metadata in metadatalist:
-                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
-                writer = JSONWriter(modifiedOutfile)
-                writer.write(metadata.dataframe)
-        except FileExistsError:
-            raise FileExistsError(f"Directory '{folder}' already exists")
-
-
-def write_csv(metadatalist, outfile):
-    """
-        Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
-        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
-        :param file_df: File dataframe
-        :param outfile: file name to write to
-        :param delimiter: delimiter
-        :return: Nothing
-        """
-    if len(metadatalist) == 1:
-        writer = CSVWriter(outfile)
-        writer.write(metadatalist[0].dataframe)
-    else:
-        folder = os.path.splitext(outfile)[0]
-        try:
-            create_directory(folder)
-            for metadata in metadatalist:
-                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
-                writer = CSVWriter(modifiedOutfile)
-                writer.write(metadata.dataframe)
-        except FileExistsError:
-            raise FileExistsError(f"Directory '{folder}' already exists")
-
-
-def write_pif(metadatalist, outfile):
-    """
-        Function: Writes the dataframe to a CSV file. If multiple sheetnames are present, it creates a directory and
-        populates that directory with each merged dataframe. Otherwise, it just writes to one file.
-        :param file_df: File dataframe
-        :param outfile: file name to write to
-        :param delimiter: delimiter
-        :return: Nothing
-        """
-    if len(metadatalist) == 1:
-        writer = PifWriter(outfile)
-        writer.write(metadatalist[0].dataframe)
-    else:
-        folder = os.path.splitext(outfile)[0]
-        try:
-            create_directory(folder)
-            for metadata in metadatalist:
-                modifiedOutfile = folder + '/' + metadata.sheetname + '_' + outfile
-                writer = PifWriter(modifiedOutfile)
-                writer.write(metadata.dataframe)
-        except FileExistsError:
-            raise FileExistsError(f"Directory '{folder}' already exists")
+    return os.path.splitext(filename)[1].strip('.')
 
 
 def create_directory(folderName):
@@ -577,25 +280,6 @@ def join_two_dataframes(lhs, rhs):
     return pd.concat([lhs, rhs], sort=False, ignore_index=True)
 
 
-def join_many_dataframes(dataframes):
-    """
-    :param dfs: list of the dataframes
-    :return: concatenated dataframe
-    """
-    combined = create_empty_df()
-    for df in dataframes:
-        combined = pd.concat([combined, df], sort=False, ignore_index=True)
-    return combined
-
-
-def guess_file_type(filename):
-    """
-    :param filename: name of the file
-    :return: the file handle that presumably tells the type of the file
-    """
-    return os.path.splitext(filename)[1].strip('.')
-
-
 def check_two_dfs_for_merge_conflict(args, leftDataframe, rightDataframe, sheetname):
     df = join_two_dataframes(leftDataframe, rightDataframe)
     duplicates = find_duplicate_sample_names(args, df)
@@ -610,12 +294,6 @@ def check_two_dfs_for_merge_conflict(args, leftDataframe, rightDataframe, sheetn
                 # The above if statement checks if there is more than one unique value per column. If the global default
                 # variable is (None), then it prompts the user to choose which value to accept. Then, it changes the
                 # values in each dataframe to match this.
-                # choice = make_user_choose_between_two_files(temp[column].values,
-                #                                             temp['Filename'].values[0],
-                #                                             temp['Filename'].values[1],
-                #                                             column,
-                #                                             temp[args.key].values[0],
-                #                                             sheetname)
                 if args.interactive:
                     merger = InteractiveActions()
                     df.at[df[args.key] == name, column] = merger(temp['Filename'].values[0],
@@ -625,9 +303,10 @@ def check_two_dfs_for_merge_conflict(args, leftDataframe, rightDataframe, sheetn
                                                                                  column,
                                                                                  temp[column].values[0],
                                                                                  temp[column].values[1])
-                merger = args.mergedefault
-                df.at[df[args.key] == name, column] = merger(temp[column].values[0],
-                                                                             temp[column].values[1])
+                else:
+                    merger = args.mergedefault
+                    df.at[df[args.key] == name, column] = merger(temp[column].values[0],
+                                                                 temp[column].values[1])
     return df
 
 
@@ -696,124 +375,17 @@ def check_for_sample_name_uniqueness(args, df, filename, sheetname, ftype):
         for column in temp:
             instances = temp[column].nunique()
             if instances > 1:
-                # choice = make_user_choose_within_one_file(temp[column].values,
-                #                                           list(temp.index.values),
-                #                                           column,
-                #                                           filename,
-                #                                           sheetname,
-                #                                           temp[args.key].values[0])
-                # df.loc[df[args.key] == name, column] = choice
-                # raise ValueError(f'Conflicting values found within file {filename} ' +
-                #                  (f'in sheet {sheetname}' if ftype == 'xlsx' else '') +
-                #                  (f'under column {column}' )+
-                #                  (f'for the sample {name}'))
-                display_conflicting_values_error(temp[column].values,
-                                                 list(temp.index.values),
-                                                 column,
-                                                 filename,
-                                                 sheetname,
-                                                 temp[args.key].values[0],
-                                                 ftype)
+                raise ValueError(f"Aborting due to conflict in file '{filename}' in sheet '{sheetname}'")
     return fix_dataframe(args, df)
 
 
 def check_sample_name_is_represented_in_dataframe(args, df, filename, sheetname, ftype):
     sampleName = args.key
     if sampleName not in df.columns:
-        errorMessage = ((f"The sample name '{sampleName}' is not a column name in file '{filename}' ") +
-                        (f"within sheet '{sheetname}'." if ftype == 'xlsx' else '.'))
+        errorMessage = (f"The sample name '{sampleName}' is not a column name in file '{filename}' "
+                        f"within sheet '{sheetname}'." if ftype == 'xlsx' else '.')
         raise KeyError(errorMessage)
     return df
-
-
-def display_conflicting_values_error(values, rows, column, filename='None', sheetname='Sheet1', sample='None', ftype = None):
-    # rowList = ['\nRow ' + str(rows[i]) + ': ' + str(values[i]) for i in range(len(values))]
-    # displayRows = ''
-    # for row in rowList:
-    #     displayRows = displayRows + row
-    errorMessage = ((f'Conflicting values found within file {filename} ') +
-                    (f'in sheet {sheetname} ' if ftype == 'xlsx' else '') +
-                    (f'under column {column} ') +
-                    (f'for sample {sample}. Aborting merge.')
-                    )
-    raise ValueError(errorMessage)
-
-
-def make_user_choose_within_one_file(values, rows, column, filename='None', sheetname='Sheet1', sample='None'):
-    """
-    Function: this is called when the user is prompted to resolve a merge conflict in a single file.
-    It presents the values that are conflicting with each other and has the user enter the number of
-    the value of his/her choice.
-    :param arr: list of the sample names that are causing a conflict
-    :param column: column with the conflicting values
-    :param filename: name of the file the dataframe came from
-    :param sheetname: name of the sheet
-    :param sample: sample name with conflicting values
-    :return: returns the value that the user picks
-    """
-    if default is not None:
-        return take_keyword(convert_merge_default_into_number(default), [values[0], values[-1]])
-    print("Multiple values found in '", filename, "' in sheet '",
-          sheetname, "' for sample '", sample, "' under column '", column, "'")
-    for i in range(len(values)):
-        print('', i+1, ':', 'Take value', values[i], 'from row', rows[i]+1)
-    print('', len(values)+1, ': Join values into a list\n',
-          len(values)+2, ': Take average (mean)\n',
-          len(values)+3, ': Abort merge\n')
-    return take_keyword_one_file(int(input('Enter the number of the value\n')), values)
-
-
-def take_keyword_one_file(input, values):
-    """
-    Function: This takes a number between 1 and 5 and outputs the corresponding value of the array, or aborts the
-    merge if that is what the user chooses.
-    :param argument: keyboard entry from the user
-    :param values: list of the possible valuse for the user to chose
-    :return: value chosen by the user
-    """
-    if input <= len(values):
-        return values[input-1]
-    else:
-        input = input - len(values)
-        action = {
-            1: str(list(values)),
-            # list of both of them
-            2: (values[0]+values[1])/2,
-            # take average of values
-            3: 'exit',
-            # abort merge
-        }
-        if action.get(input) is 'exit':
-            raise ValueError('Aborting merge due to merge conflict')
-        selectedIndex = action.get(input, "Invalid selection. Aborting merge.")
-        return selectedIndex
-
-
-def make_user_choose_between_two_files(arr, file1, file2, column, sample, sheetname='Sheet1'):
-    """
-    function: this is called when two files are conflicting. It displays each value and its corresponding
-    sheet name and file name, then asks the user to input their choice. Also, it gives the option of aborting the
-    code or entering the files in as a list.
-
-    :param arr: list of conflicting data
-    :param file1: first file name
-    :param file2: second file name
-    :param column: column that the conflicting value is from
-    :param sample: sample name the conflicting value is from
-    :param sheetname: sheet that the values are from
-    :return: numerical value that the user chooses
-    """
-    if default is not None:
-        return take_keyword(convert_merge_default_into_number(default), arr)
-    else:
-        print('Merge conflict between', file1, 'and', file2, 'in sheet',
-              sheetname, 'for sample', sample, 'under column', column, '\n',
-              '\n1: Accept value', arr[0], 'from file', file1,
-              '\n2: Accept value', arr[1], 'from file', file2,
-              '\n3: Join values into a list',
-              '\n4: Take average (mean)',
-              '\n5: Abort the merge\n')
-        return take_keyword(int(input('Enter the number\n')), arr)
 
 
 def check_if_nan(df):
@@ -895,43 +467,6 @@ def take_keyword(input, values):
     return selectedIndex
 
 
-# def get_sheetnames(file):
-#     """
-#     Function: Takes an array of excel files and finds the sheetnames of all of them. Then it eliminates the duplicates
-#     and returns a list of each sheetname.
-#     :param files: all the files being accessed
-#     :return: a list of every sheet name that is being used
-#     """
-#     arr = ExcelReader(file).sheetnames()
-#     return list(dict.fromkeys(arr))
-#     # Eliminates duplicate names while still preserving order. That is because when creating a dictionary, python
-#     # automatically gets rid of duplicate keys.
-
-
-def get_sheetnames_from_file_df(file_df):
-    sheets = list(file_df['sheetname'].drop_duplicates())
-    return sheets
-
-
-def convert_merge_default_into_number(input):
-    """
-    Function: The merge default is entered as a string, and this converts it to a number. This function also catches
-    if the user enters an invalid merge action.
-    :param input: merge default action passed in by the user
-    :return: value from 1 to 4 to give to the merge_conflict function should a conflict arise
-    """
-    try:
-        return{
-            'first': 1,
-            'second': 2,
-            'join': 3,
-            'mean': 4,
-            'abort': 5
-        }[input]
-    except KeyError:
-        raise KeyError(f"{input} is not a recognized default action")
-
-
 def get_file(fname, ftype):
     """
     Function: If the user enters a file name with no extention and a file type, go ahead and join them together.
@@ -945,50 +480,6 @@ def get_file(fname, ftype):
     # If the file extention does not exist and the file type does exist, join them together.
     else:
         return fname
-
-
-def set_key_variable(columnName):
-    global key
-    key = columnName
-
-
-def create_df_of_all_infiles(args):
-    """
-    Function: This creates a dataframe containing the information for each file read in. Let's say we read in three
-    files: file1.xlsx, file2.xlsx, and file3.txt. Each of the excel files has just one sheet, 'Hardness'. We want the dataframe
-    to look like this:
-
-    Filename          Dataframe               Type    Sheetname
-    'file1.xlsx'    <dataframe for file1>     xlsx    'Hardness'
-    'file2.xlsx'    <dataframe for file2>     xlsx    'Hardness'
-    'file3.txt'     <dataframe for file3>     txt     'Sheet1'
-
-    Notice how the sheet name for file3.txt is 'Sheet1', we have a function that allows the user to specify the sheet
-    name for non-excel files, but if no name is specified it defaults to 'Sheet1'
-
-    There will be one row for each dataframe, but not necessarily one row for each file name. For example, if we were
-    to read in a fourth file, 'file4.xlsx', with two sheets in it, 'Hardness' and 'Spectroscopy', our file dataframe
-    will look like this:
-
-    Filename              Dataframe                      Type    Sheetname
-    'file1.xlsx'    <dataframe for file1>                xlsx    'Hardness'
-    'file2.xlsx'    <dataframe for file2>                xlsx    'Hardness'
-    'file3.txt'     <dataframe for file3>                txt     'Sheet1'
-    'file4.xlsx'    <first dataframe for file4>          xlsx    'Hardness'
-    'file4.xlsx'    <second dataframe for file4>         xlsx    'Spectroscopy'
-
-
-    The reason I decided to do it this way is so that we can pass the information to other functions easier . We can
-    simply call df['dataframe'] and get a list of all the dataframes to write to a file.
-    :param args: The argparse object containing all filenames.
-    :return: the file dataframe
-    """
-    df_rows_from_args_infile = [file_df_row(file, guess_file_type(file)) for file in args.infiles] if args.infiles else []
-    # Creates an array of each row of the file dataframe. It calls the function 'create_file_df()' and gives it the
-    # file name and guesses the file type.
-    df_rows_from_args_input = [file_df_row(file, ftype) for ftype, file in args.input] if args.input else []
-    file_df = join_many_dataframes(df_rows_from_args_input + df_rows_from_args_infile)
-    return file_df
 
 
 def setup_validator():
@@ -1031,49 +522,6 @@ def create_empty_df(header=None):
     return pd.DataFrame(columns=header)
 
 
-def add_row_to_file_df(file_df, filename, dataframe, ftype, sheetname):
-    """
-    Function: Adds a row to the file dataframe. All we have to do is give it the filename, dataframe, type, and sheet
-    name and it appends it to the dataframe
-
-    :param file_df: The dataframe of all the files, corresponding dataframes, types, and sheetnames
-    :param filename: file name
-    :param dataframe: dataframe corresponding to the file name
-    :param ftype: type
-    :param sheetname: sheet name
-    :return: dataframe with the new row
-    """
-    return file_df.append({'filename': filename,
-                      'dataframe': dataframe,
-                      'type': ftype,
-                      'sheetname': sheetname
-                      }, ignore_index=True)
-
-
-def file_df_row(filename, ftype):
-    """
-    Function: creates new row in te file dataframe. It figures out the file name, corresponding dataframe, type, and
-    sheetname, then puts them all into a row in the file dataframe.
-
-    :param filename: name of the file being passed to the function
-    :param ftype: type fo the file
-    :return: dataframe containing name, dataframe, type, and any sheetnames of the file
-    """
-    file_df = create_empty_df(['filename', 'dataframe', 'type', 'sheetname'])
-    sheets = get_sheetnames(filename) if ftype == 'xlsx' else [txtSheetname]
-    # if the file type is xlsx, get all the sheetnames as a list. Otherwise, it sets the sheetname as the txtSheetname
-    # variable, which is a global variable set by the user. If the user does not specify a sheetname for non-excel
-    # files, it defaults to 'Sheet1'.
-    for sheetname in sheets:
-        df = get_dataframe(filename, ftype, sheetname)
-        # This is where we finally get to read the dataframe for the file. The read() function determines what reader
-        # to use, and returns the file as a dataframe.
-        file_df = add_row_to_file_df(file_df, filename, df, ftype, sheetname)
-    # Some files have multiple sheetnames and will therefore have multiple rows in the file dataframe. This adds a new
-    # row for each sheet.
-    return file_df
-
-
 def get_dataframe(args, filename, ftype, sheetname):
     validate = setup_validator()
     # Look under the setup_validator function, I explain how the validator works.
@@ -1082,65 +530,6 @@ def get_dataframe(args, filename, ftype, sheetname):
         df = validate(args, df, filename, sheetname, ftype)
     return df
 
-
-def find_default_action(args):
-    """
-    Function: There's a few actions the user can set up as a default in case of a merge conflice. These are 'quiet',
-    'first', 'second', 'abort', 'join', and 'interactive'. If no option is specified, default is 'abort'
-    :param args: the argparser
-    :return: default merge action
-    """
-    default = args.mergedefault if args.mergedefault is not None else 'abort'
-    # If the user has set a default action, set 'default' to that action. Otherwise, set 'default' to 'abort'
-    default = 'abort' if args.quiet else default
-    # The user can specify '-q' which means quiet. If this is the case, set the default value to 'abort'
-    default = None if args.interactive else default
-    # If the user specifies '--interactive', set default to None.
-    return default
-
-
-# def create_parser(args):
-#     """
-#     function: set up a parser with all the args the user passes to the function
-#     :return: parser containing all the args
-#     """
-#     parser = argparse.ArgumentParser(description='parse arguments')
-#     parser.add_argument('infiles', nargs='*', help='input file name with no file type')
-#     parser.add_argument('-o', '--output', help='output file name')
-#     parser.add_argument('-i', '--input', nargs=2, help='input file name with accompanying file type', action='append')
-#     parser.add_argument('-m', '--mergedefault', help='default solution to merge conflicts')
-#     parser.add_argument('--interactive', action='store_true', help='make the program prompt user for input in case of conflict')
-#     parser.add_argument('-s', '--sheetname', help='Specify a default sheetname in case writing to an xlsx file')
-#     parser.add_argument('--outputformat', help='specify output file type')
-#     parser.add_argument('-q', '--quiet', action='store_true', help='Should a merge conflict happen, default to abort')
-#     parser.add_argument('-k', '--key', help='Specify the name of the sample name column', default='Sample Name')
-#     return parser.parse_args(args)
-
-
-def set_global_variables(args=None, Default='abort', TxtSheetname='Sheet1', Key='Sample Name'):
-    """
-    Function: initialize the global variables. As of now, there are two, but I might add more later.
-    :param args:
-    :type argparse object
-    :param default:
-    :type str
-    :param txtSheetname = sheetname for excel files when reading non-excel inputs
-    :type str
-    :param Key: column name that acts as sample name
-    :return: None
-    """
-    global default
-    global txtSheetname
-    global key
-    if args:
-        default = find_default_action(args)
-        txtSheetname = args.sheetname if args.sheetname else 'Sheet1'
-        key = args.key
-        # This gives the user an option to specify a sheetname for non-excel files, otherwise the default name is 'Sheet1'
-    else:
-        default = Default
-        txtSheetname = TxtSheetname
-        key = Key
 
 def main(args):
     """Main entry point allowing external calls
@@ -1170,4 +559,4 @@ def run():
 
 
 if __name__ == "__main__":
-    execute()
+    run()

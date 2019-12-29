@@ -122,10 +122,10 @@ class InteractiveActions:
 
     @staticmethod
     def message(file1, file2, sheetname, sample, column, value1, value2):
-        return (f"Merge conflict between '{file1}' and '{file2}' in sheet'{sheetname}"
-                f"'for sample '{sample}' under column '{column}"
-                f"\n1: Accept value '{value1}' from file {file1}"
-                f"\n2: Accept value '{value2}' from file {file2}"
+        return (f"Merge conflict between '{file1}' and '{file2}' in sheet '{sheetname}'"
+                f" for sample '{sample}' under column '{column}'"
+                f"\n1: Accept value '{value1}' from file '{file1}'"
+                f"\n2: Accept value '{value2}' from file '{file2}'"
                 f"\n3: Join values into a list"
                 f"\n4: Take average (mean)"
                 f"\n5: Abort the merge\n")
