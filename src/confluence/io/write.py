@@ -152,3 +152,10 @@ def write_pif(metadatalist, outfile):
                 writer.write(metadata.dataframe)
         except FileExistsError:
             raise FileExistsError(f"Directory '{folder}' already exists")
+
+
+def create_directory(folderName):
+    try:
+        os.mkdir(folderName)
+    except FileExistsError:
+        raise FileExistsError(f"Folder named '{folderName}' already exists. Specify a different output name.")

@@ -100,15 +100,7 @@ def test_merge_default(expected_dataframe):
     expected = expected_dataframe
     assert actual.equals(expected)
 
-# def test_with_extra_sheets(expected_dataframe, expected_dataframe_with_extra_column):
-#     sheet1 = merge_files('test_files/multiple_sheets1.xlsx test_files/multiple_sheets2.xlsx -k foo'.split())
-#     sheet2 = merge_files([r'test_files/multiple_sheets1.xlsx', r'test_files/multiple_sheets2.xlsx'], 'Bar')
-#     expectedSheet1 = expected_dataframe
-#     expectedSheet2 = expected_dataframe_with_extra_column
-#     assert sheet1.equals(expectedSheet1)
-#     assert sheet2.equals(expectedSheet2)
-#
-#
+
 # # ############ Once the CLI parser is ready to go, we will go ahead and create this function.###########
 #
 # # def test_cli():

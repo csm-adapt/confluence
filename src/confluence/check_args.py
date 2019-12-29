@@ -13,7 +13,7 @@ def check_input(args):
         for input in args.input:
             if os.path.exists(input[0]):
                 raise IOError('When using -i/--input, specify the file type first, '
-                          'then the file name.')
+                              'then the file name.')
     return args
 
 

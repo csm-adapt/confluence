@@ -254,21 +254,12 @@ def sort_values(args, df):
     return df.sort_values([args.key]).reset_index(drop=True)
 
 
-
-
 def guess_file_type(filename):
     """
     :param filename: name of the file
     :return: the file handle that presumably tells the type of the file
     """
     return os.path.splitext(filename)[1].strip('.')
-
-
-def create_directory(folderName):
-    try:
-        os.mkdir(folderName)
-    except FileExistsError:
-        raise FileExistsError(f"Folder named '{folderName}' already exists. Specify a different output name.")
 
 
 def join_two_dataframes(lhs, rhs):

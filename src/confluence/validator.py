@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 class QMDataFrameValidator(object):
     def __init__(self):
         self._callbacks = []
