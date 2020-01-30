@@ -4,8 +4,8 @@
 import pytest
 from confluence.skeleton import fib
 
-__author__ = "amikulichmines"
-__copyright__ = "amikulichmines"
+__author__ = "Branden Kappes"
+__copyright__ = "Branden Kappes"
 __license__ = "mit"
 
 

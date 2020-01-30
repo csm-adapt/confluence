@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="4f8d7e2c-0983-4a55-9804-50fa94cf4acf" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/confluence/confluence.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/core/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/core/container.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/core/setup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/io/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/io/excel.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/subcommands/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/confluence/subcommands/merge.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AUTHORS.rst" beforeDir="false" afterPath="$PROJECT_DIR$/AUTHORS.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.rst" beforeDir="false" afterPath="$PROJECT_DIR$/README.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/docs/conf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/index.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/license.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/license.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/setup.cfg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/confluence/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/putup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/read/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/read/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/skeleton.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/write/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/confluence/write/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_skeleton.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_skeleton.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1X5wNIt01aiahc9Dhbkh8L4Qsjd" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4f8d7e2c-0983-4a55-9804-50fa94cf4acf" name="Default Changelist" comment="" />
+      <created>1580349221708</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1580349221708</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="requirements.txt" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="276" y="377" key="FileChooserDialogImpl" timestamp="1580349378923">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="276" y="377" key="FileChooserDialogImpl/0.23.1680.1027@0.23.1680.1027" timestamp="1580349378923" />
+    <state x="341" y="175" key="SettingsEditor" timestamp="1580349417137">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="341" y="175" key="SettingsEditor/0.23.1680.1027@0.23.1680.1027" timestamp="1580349417137" />
+  </component>
+</project>

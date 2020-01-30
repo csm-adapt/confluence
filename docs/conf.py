@@ -43,13 +43,13 @@ except FileNotFoundError:
 
 try:
     import sphinx
-    from pkg_resources import parse_version
+    from distutils.version import LooseVersion
 
     cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
     cmd_line = cmd_line_template.format(outputdir=output_dir, moduledir=module_dir)
 
     args = cmd_line.split(" ")
-    if parse_version(sphinx.__version__) >= parse_version('1.7'):
+    if LooseVersion(sphinx.__version__) >= LooseVersion('1.7'):
         args = args[1:]
 
     apidoc.main(args)
@@ -82,7 +82,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'confluence'
-copyright = u'2019, amikulichmines'
+copyright = u'2020, Branden Kappes'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -140,10 +140,7 @@ html_theme = 'alabaster'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    'sidebar_width': '300px',
-    'page_width': '1200px'
-}
+# html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -236,7 +233,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'user_guide.tex', u'confluence Documentation',
-   u'amikulichmines', 'manual'),
+   u'Branden Kappes', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
