@@ -2,33 +2,32 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4f8d7e2c-0983-4a55-9804-50fa94cf4acf" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/confluence/confluence.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/core/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/core/container.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/core/setup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/io/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/io/excel.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/subcommands/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/confluence/subcommands/merge.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AUTHORS.rst" beforeDir="false" afterPath="$PROJECT_DIR$/AUTHORS.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.rst" beforeDir="false" afterPath="$PROJECT_DIR$/README.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/docs/conf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/index.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/license.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/license.rst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/setup.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/confluence/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/putup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/read/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/read/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/skeleton.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/write/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/confluence/write/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/conftest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_skeleton.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_skeleton.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/Newfile.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/Newfile.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/Newfile.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/Newfile.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/complete_excel" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/complete_excel.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/complex_data1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/complex_data2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/empty_cell.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/extra_columns1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/extra_columns2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/extra_rows1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/extra_rows2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/merge_conflict1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/merge_conflict2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/multiple_sheets1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/multiple_sheets2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/simple1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/simple2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/test_CSV_file.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/test_JSON_file.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/test_txt_file.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/three_file_merge1.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/three_file_merge2.xlsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_files/three_file_merge3.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,6 +42,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="bkappes" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1X5wNIt01aiahc9Dhbkh8L4Qsjd" />
@@ -88,14 +92,37 @@
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName="requirements.txt" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="WindowStateProjectService">
+    <state x="0" y="23" width="863" height="1027" key="CommitChangelistDialog2" timestamp="1580364709309">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="0" y="23" width="863" height="1027" key="CommitChangelistDialog2/0.23.1680.1027@0.23.1680.1027" timestamp="1580364709309" />
     <state x="276" y="377" key="FileChooserDialogImpl" timestamp="1580349378923">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="276" y="377" key="FileChooserDialogImpl/0.23.1680.1027@0.23.1680.1027" timestamp="1580349378923" />
+    <state x="551" y="259" key="MultipleFileMergeDialog" timestamp="1580364500636">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="551" y="259" key="MultipleFileMergeDialog/0.23.1680.1027@0.23.1680.1027" timestamp="1580364500636" />
     <state x="341" y="175" key="SettingsEditor" timestamp="1580349417137">
       <screen x="0" y="23" width="1680" height="1027" />
     </state>
     <state x="341" y="175" key="SettingsEditor/0.23.1680.1027@0.23.1680.1027" timestamp="1580349417137" />
+    <state x="440" y="276" key="Vcs.Push.Dialog.v2" timestamp="1580364266581">
+      <screen x="0" y="23" width="1680" height="1027" />
+    </state>
+    <state x="440" y="276" key="Vcs.Push.Dialog.v2/0.23.1680.1027@0.23.1680.1027" timestamp="1580364266581" />
   </component>
 </project>
