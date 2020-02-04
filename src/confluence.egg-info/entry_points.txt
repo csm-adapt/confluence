@@ -1,4 +1,0 @@
-
-[console_scripts]
-    confluence = confluence.confluence:run
-    confluence-merge = confluence.subcommands.merge:run
