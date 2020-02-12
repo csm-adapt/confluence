@@ -54,6 +54,26 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
+
+    #Original function
+
+    # left = lhs.combine_first(rhs).sort_index()
+    # right = rhs.combine_first(lhs).sort_index()
+    # equal = left.equals(right)
+    # if equal:
+    #     return left
+    # else:
+    #     _logger.debug(f"{left == right}")
+    #     if resolution is MergeMethod.FIRST:
+    #         return left
+    #     elif resolution is MergeMethod.SECOND:
+    #         return right
+    #     else:
+    #         raise ValueError("An unresolved merge conflict was identified.")
+    #
+    # ===============================
+    # New function, with dict instead of if statements
+
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
     equal = left.equals(right)
@@ -61,13 +81,13 @@ def merge(lhs, rhs, resolution=None):
         return left
     else:
         _logger.debug(f"{left == right}")
-        if resolution is MergeMethod.FIRST:
-            return left
-        elif resolution is MergeMethod.SECOND:
-            return right
-        else:
+        try:
+            return{
+                MergeMethod.FIRST: left,
+                MergeMethod.SECOND: right
+            }[resolution]
+        except KeyError:
             raise ValueError("An unresolved merge conflict was identified.")
-
 
 def parse_args(args):
     """Parse command line parameters
@@ -95,7 +115,7 @@ def parse_args(args):
     # If called as a main function, this processes command line arguments
     # as main. If this is called as part of an action
     if isinstance(args, list):
-        parser = argparse.ArgumentParser(description=description)
+        parser = argparse.ArgumentParser(description="Merge two or more data files.")
     else:
         parser = args
     # add required parameters for this application
@@ -137,6 +157,17 @@ def parse_args(args):
     if isinstance(args, list):
         return parser.parse_args(args)
 
+def postprocess_cli(args):
+    """
+    Changes the command line arguments in place for
+    this function.
+
+    :param args: Argument namespace
+    :return: None
+    """
+    if args.index is None:
+        _logger.warning("No merge column was specified. Using the first column.")
+        args.index = 0
 
 def main(args):
     """Main entry point allowing external calls
@@ -147,6 +178,9 @@ def main(args):
     if isinstance(args, list):
         _logger.debug(f"Parsing command line arguments: {args}")
         args = parse_args(args)
+    # handle non-standard CLI defaults
+    postprocess_cli(args)
+    # start logging
     setup_logging(args.loglevel)
     _logger.debug(f"Starting merge operation...")
     # read input files
