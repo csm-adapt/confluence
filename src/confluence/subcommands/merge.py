@@ -54,6 +54,26 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
+
+    #Original function
+
+    # left = lhs.combine_first(rhs).sort_index()
+    # right = rhs.combine_first(lhs).sort_index()
+    # equal = left.equals(right)
+    # if equal:
+    #     return left
+    # else:
+    #     _logger.debug(f"{left == right}")
+    #     if resolution is MergeMethod.FIRST:
+    #         return left
+    #     elif resolution is MergeMethod.SECOND:
+    #         return right
+    #     else:
+    #         raise ValueError("An unresolved merge conflict was identified.")
+    #
+    # ===============================
+    # New function, with dict instead of if statements
+
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
     equal = left.equals(right)
@@ -61,13 +81,13 @@ def merge(lhs, rhs, resolution=None):
         return left
     else:
         _logger.debug(f"{left == right}")
-        if resolution is MergeMethod.FIRST:
-            return left
-        elif resolution is MergeMethod.SECOND:
-            return right
-        else:
+        try:
+            return{
+                MergeMethod.FIRST: left,
+                MergeMethod.SECOND: right
+            }[resolution]
+        except KeyError:
             raise ValueError("An unresolved merge conflict was identified.")
-
 
 def parse_args(args):
     """Parse command line parameters

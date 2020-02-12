@@ -21,8 +21,6 @@ import sys
 import logging
 
 from .core.setup import setup_logging
-#from ...tests.test_merge import parse_args as test_parse_args
-#from ...tests.test_merge import main as test_main
 from .subcommands.merge import parse_args as merge_parse_args
 from .subcommands.merge import main as merge_main
 
