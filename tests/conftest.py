@@ -7,6 +7,9 @@
     Read more about conftest.py under:
     https://pytest.org/latest/plugins.html
 """
-from __future__ import print_function, absolute_import, division
 
-# import pytest
+
+__author__ = "amikulichmines"
+__copyright__ = "amikulichmines"
+__license__ = "mit"
+
