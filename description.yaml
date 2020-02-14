@@ -1,0 +1,34 @@
+# This file describes the converter
+name: confluence_merge
+namespace: mines/ingest                     # Any valid python key (should be unique)
+version: auto                               # Please use 3-number versions
+description: Merge information from a simply, but specially formatted XLSX into an existing file of the same name. # Any string
+displayName: "Mines: merge"
+
+arguments:                  # These are the arguments for the convert method
+- name: dest
+  desc: "Destination filename in the Dataset."
+  type: String
+  required: true
+
+- name: resolve            # each argument has a name (must be a valid python key)
+  desc: "Handle merge conflicts: abort (default), old, new" # and a description (any string)
+  type: String             # this is the type of the argument (see above)
+  required: false          # and whether or not the argument is required
+
+- name: index
+  desc: "Column to use as the index (row label). Default: 0 (first column)."
+  type: Integer
+  required: false
+
+- name: backup
+  desc: "Backup the destination file before merge."
+  type: Boolean
+  required: false
+## Valid types:
+# String
+# Integer
+# Real
+# List[n][t], where n is the number of elements in the list and t is the corresponding primitive type
+# e.g. List[3][Real] is a vector of length three
+# e.g. List[2][String] is a list of two strings

@@ -55,7 +55,7 @@ def merge(lhs, rhs, resolution=None):
         Merged data.
     """
 
-    #Original function
+    # Original function
 
     # left = lhs.combine_first(rhs).sort_index()
     # right = rhs.combine_first(lhs).sort_index()
@@ -82,12 +82,11 @@ def merge(lhs, rhs, resolution=None):
     else:
         _logger.debug(f"{left == right}")
         try:
-            return{
-                MergeMethod.FIRST: left,
-                MergeMethod.SECOND: right
-            }[resolution]
+            return {MergeMethod.FIRST: left,
+                    MergeMethod.SECOND: right}[resolution]
         except KeyError:
             raise ValueError("An unresolved merge conflict was identified.")
+
 
 def parse_args(args):
     """Parse command line parameters
@@ -192,9 +191,9 @@ def main(args):
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
-    binary_func = lambda lhs, rhs: merge(lhs, rhs, args.resolve)
-    for k,v in data.items():
-        data[k] = functools.reduce(binary_func, data[k])
+    for k, v in data.items():
+        data[k] = functools.reduce(
+            lambda lhs, rhs: merge(lhs, rhs, args.resolve), data[k])
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")
