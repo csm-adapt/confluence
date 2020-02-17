@@ -26,6 +26,7 @@ from collections import OrderedDict
 from enum import Enum, auto
 from ..core.setup import setup_logging
 from ..io import read, write
+from .validator import validate
 
 
 __author__ = "Branden Kappes"
@@ -89,6 +90,7 @@ def merge(lhs, rhs, resolution=None):
         except KeyError:
             raise ValueError("An unresolved merge conflict was identified.")
 
+
 def parse_args(args):
     """Parse command line parameters
 
@@ -120,9 +122,9 @@ def parse_args(args):
         parser = args
     # add required parameters for this application
     parser.add_argument("filelist",
-                        nargs='+',
-                        type=str,
-                        help="List of files to be merged.")
+        nargs='+',
+        type=str,
+        help="List of files to be merged.")
     # add options for this application
     parser.add_argument('--index-column',
         dest="index",
@@ -157,6 +159,7 @@ def parse_args(args):
     if isinstance(args, list):
         return parser.parse_args(args)
 
+
 def postprocess_cli(args):
     """
     Changes the command line arguments in place for
@@ -168,6 +171,7 @@ def postprocess_cli(args):
     if args.index is None:
         _logger.warning("No merge column was specified. Using the first column.")
         args.index = 0
+
 
 def main(args):
     """Main entry point allowing external calls
@@ -186,14 +190,15 @@ def main(args):
     # read input files
     _logger.debug(f"Reading files: {args.filelist}")
     data = OrderedDict()
-    for od in [read(fname, index_col=args.index) for fname in args.filelist]:
+    for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k,v in od.items():
+            validate(v, fname, k)
             data[k] = data.get(k, []) + [v]
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
     binary_func = lambda lhs, rhs: merge(lhs, rhs, args.resolve)
-    for k,v in data.items():
+    for k, v in data.items():
         data[k] = functools.reduce(binary_func, data[k])
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
