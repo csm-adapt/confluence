@@ -136,3 +136,4 @@ def test_CSV(expected_accept_first):
     merge_main(cli)
     df = read('test_files/123-ABC.csv', index_col=0)['CSV']
     assert_frame_equal(df, expected_accept_first)
+
