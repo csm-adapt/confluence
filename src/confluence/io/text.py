@@ -1,7 +1,6 @@
 import logging
 import pandas as pd
 from collections import OrderedDict
-import json
 import os
 _logger = logging.getLogger(__name__)
 
@@ -17,14 +16,13 @@ def read(fname, **kwds):
         Container object.
     """
     try:
-        with open(fname) as json_file:
-            data = json.load(json_file)
-        _logger.debug(f"Reading JSON file {fname}")
-        df = pd.read_json(data)
-        return {'JSON': df}
+        _logger.debug(f"Reading text file {fname}")
+        df = pd.read_csv(fname, **kwds)
+        return {'text': df}
 
     except KeyError:
         raise ValueError(f'Index column <{kwds["index_col"]}> is not in dataframe')
+
 
 def write(fname, df, **kwds):
     """
@@ -42,12 +40,8 @@ def write(fname, df, **kwds):
         for key in df.keys():
             file, ext = os.path.splitext(fname)
             fname = file + '_' + key + ext if len(df.keys()) > 1 else fname
-            with open(fname, 'w+') as outfile:
-                jsonfile = df[key].to_json()
-                json.dump(jsonfile, outfile)
+            df[key].to_csv(fname, **kwds)
 
     else:
         _logger.debug(f"Writing {df.shape} dataframe to {fname}.")
-        jsonfile = df.to_json(index=True)
-        with open(fname, 'w+') as outfile:
-            json.dump(jsonfile, outfile)
+        df.to_csv(fname, **kwds)
