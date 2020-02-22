@@ -181,7 +181,7 @@ def main(args):
     for k, v in data.items():
         data[k] = functools.reduce(
             lambda lhs, rhs: merge(lhs, rhs, args.resolve), data[k])
-        data[k] = validate_dataframe(data[k]) if args.validate else data[k]
+        data[k] = validate_dataframe(data[k], args.output ,k) if args.validate else data[k]
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")
