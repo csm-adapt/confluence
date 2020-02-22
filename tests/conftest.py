@@ -9,7 +9,7 @@
 """
 
 
-__author__ = "amikulichmines"
-__copyright__ = "amikulichmines"
+__author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
+__copyright__ = "KMMD, LLC."
 __license__ = "mit"
 

@@ -1,13 +1,16 @@
 import os
+import logging
 from enum import Enum, auto
 from .excel import read as read_excel
 from .excel import write as write_excel
-from .JSON import read as read_json
-from .JSON import write as write_json
-from .CSV import read as read_csv
-from .CSV import write as write_csv
+from .json import read as read_json
+from .json import write as write_json
+from .csv import read as read_csv
+from .csv import write as write_csv
 from .text import read as read_text
 from .text import write as write_text
+_logger = logging.getLogger(__name__)
+
 
 class FileFormat(Enum):
     EXCEL = auto()
@@ -27,17 +30,18 @@ def guess_format(filename):
         File format defined in FileFormat.
     """
     basename, ext = os.path.splitext(filename)
-    return {
+    fmt = {
         '.xlsx': FileFormat.EXCEL,
         '.json': FileFormat.JSON,
         '.csv': FileFormat.CSV,
         '.txt': FileFormat.TEXT
     }[ext.lower()]
+    _logger.debug(f"File format of {basename} was identified as {str(fmt)}.")
+    return fmt
 
 
 def read(filename, **kwds):
-    print('io',kwds)
-    print(kwds['index_col'])
+    _logger.debug(f"Reading {filename}, with keywords {kwds}")
     return {
         FileFormat.EXCEL: read_excel,
         FileFormat.JSON: read_json,

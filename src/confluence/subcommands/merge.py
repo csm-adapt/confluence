@@ -21,16 +21,15 @@ import sys
 import argparse
 import functools
 import logging
-import numpy as np
 from collections import OrderedDict
 from enum import Enum, auto
 from ..core.setup import setup_logging
 from ..io import read, write
-from .validator import validate
+from confluence.core.validate import validate_dataframe
 
 
-__author__ = "Branden Kappes"
-__copyright__ = "Branden Kappes"
+__author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
+__copyright__ = "KMMD, LLC."
 __license__ = "mit"
 
 _logger = logging.getLogger(__name__)
@@ -121,6 +120,10 @@ def parse_args(args):
         '--output',
         default="output.xlsx",
         help="Set the name of the output file.")
+    parser.add_argument('--validate',
+        dest="validate",
+        help="Validate output file",
+        action='store_true')
     parser.add_argument(
         '-v',
         '--verbose',
@@ -150,6 +153,7 @@ def postprocess_cli(args):
         _logger.warning("No merge column was specified. Using the first column.")
         args.index = 0
 
+
 def main(args):
     """Main entry point allowing external calls
 
@@ -169,15 +173,15 @@ def main(args):
     data = OrderedDict()
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k,v in od.items():
-            validate(v, fname, k)
+            v = validate_dataframe(v, fname, k)
             data[k] = data.get(k, []) + [v]
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
-    binary_func = lambda lhs, rhs: merge(lhs, rhs, args.resolve)
     for k, v in data.items():
         data[k] = functools.reduce(
             lambda lhs, rhs: merge(lhs, rhs, args.resolve), data[k])
+        data[k] = validate_dataframe(data[k]) if args.validate else data[k]
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")

@@ -85,55 +85,6 @@ def test_merge_conflict_from_cli(expected_accept_first):
         pass
 
 
-def test_duplicated_index():
-    cli = ['test_files/121-ABC.xlsx',
-           'test_files/123-DEF.xlsx',
-           '--index-column', 0,
-           '-m', 'keep_first',
-           '-o', 'test_files/temporary_outfile.xlsx']
-    with pytest.raises(ValueError):
-        merge_main(cli)
-    try:
-        os.remove('test_files/temporary_outfile.xlsx')
-    except OSError:
-        pass
 
 
-def test_empty_index():
-    cli = ['test_files/1_3-ABC.xlsx',
-           '-o', 'test_files/temporary_outfile.xlsx']
-    with pytest.raises(ValueError):
-        merge_main(cli)
-    try:
-        os.remove('test_files/temporary_outfile.xlsx')
-    except OSError:
-        pass
-
-
-def test_json(expected_accept_first):
-    cli = ['test_files/123-ABC.xlsx',
-           '--index-column', 0,
-           '-o', 'test_files/123-ABC.json']
-    merge_main(cli)
-    df = read('test_files/123-ABC.json', index_col=0)['JSON']
-    expected_accept_first.index.name = None
-    assert_frame_equal(df, expected_accept_first)
-
-
-def test_text(expected_accept_first):
-    cli = ['test_files/123-ABC.xlsx',
-           '--index-column', 0,
-           '-o', 'test_files/123-ABC.txt']
-    merge_main(cli)
-    df = read('test_files/123-ABC.txt', index_col=0)['text']
-    assert_frame_equal(df, expected_accept_first)
-
-
-def test_CSV(expected_accept_first):
-    cli = ['test_files/123-ABC.xlsx',
-           '--index-column', 0,
-           '-o', 'test_files/123-ABC.csv']
-    merge_main(cli)
-    df = read('test_files/123-ABC.csv', index_col=0)['CSV']
-    assert_frame_equal(df, expected_accept_first)
 

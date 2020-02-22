@@ -23,11 +23,14 @@ import logging
 from .core.setup import setup_logging
 from .subcommands.merge import parse_args as merge_parse_args
 from .subcommands.merge import main as merge_main
+from .core.validate import parse_args as validate_parse_args
+from .core.validate import main as validate_main
+from .core.validate import validate_dataframe as validate
 
 from confluence import __version__
 
-__author__ = "Branden Kappes"
-__copyright__ = "Branden Kappes"
+__author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
+__copyright__ = "KMMD, LLC."
 __license__ = "mit"
 
 _logger = logging.getLogger(__name__)
@@ -68,6 +71,12 @@ def parse_args(args):
         help="Merge the contents of two or more files.")
     merge_parser.set_defaults(func=merge_main)
     merge_parse_args(merge_parser)
+    # validate
+    _logger.debug("Validating")
+    validate_parser = subparsers.add_parser('validate',
+        help="Check file(s) for internal merge conflicts")
+    validate_parser.set_defaults(func=validate_main)
+    validate_parse_args(validate_parser)
     # add options for this application
     parser.add_argument(
         '--version',

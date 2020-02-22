@@ -10,18 +10,28 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def expected1():
+@pytest.fixture()
+def expected_merge():
     return pd.DataFrame({
-        'foo': [1, 2, 3, 4],
-        'bar': ['A', 'B', 'C', 'D']})
+        'foo': [1, 2, 3, 4, 5, 6],
+        'bar': ['A', 'B', 'C', 'D', 'E', 'F']
+    }).set_index('foo')
 
 
-@pytest.fixture
-def expected2():
+@pytest.fixture()
+def expected_accept_first():
     return pd.DataFrame({
-        'foo': [1, 2, 3, 4],
-        'bar': [5, 6, 7, 8]})
+        'foo': [1, 2, 3],
+        'bar': ['A', 'B', 'C'],
+    }).set_index('foo')
+
+
+@pytest.fixture()
+def expected_accept_second():
+    return pd.DataFrame({
+        'foo': [1, 2, 3],
+        'bar': ['D', 'E', 'F'],
+    }).set_index('foo')
 
 
 @pytest.fixture
@@ -30,28 +40,28 @@ def output_file():
     os.remove("output.xlsx")
 
 
-def test_simple_merge(expected1, output_file):
+def test_simple_merge(expected_merge, output_file):
     ofile = output_file
-    f1 = "test_files/simple1.xlsx"
-    f2 = "test_files/simple2.xlsx"
+    f1 = "test_files/123-ABC.xlsx"
+    f2 = "test_files/456-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, backup=False)
-    actual = read(ofile)['Sheet1']
-    assert_frame_equal(actual, expected1)
+    actual = read(ofile, index_col=0)['Sheet1']
+    assert_frame_equal(actual, expected_merge)
 
 
-def test_merge_conflict_accept_first(expected1, output_file):
+def test_merge_conflict_accept_first(expected_accept_first, output_file):
     ofile = output_file
-    f1 = "test_files/merge_conflict1.xlsx"
-    f2 = "test_files/merge_conflict2.xlsx"
+    f1 = "test_files/123-ABC.xlsx"
+    f2 = "test_files/123-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, resolve='old', backup=False)
-    actual = read(ofile)['Sheet1']
-    assert_frame_equal(actual, expected1)
+    actual = read(ofile, index_col=0)['Sheet1']
+    assert_frame_equal(actual, expected_accept_first)
 
 
-def test_merge_conflict_accept_second(expected2, output_file):
+def test_merge_conflict_accept_second(expected_accept_second, output_file):
     ofile = output_file
-    f1 = "test_files/merge_conflict1.xlsx"
-    f2 = "test_files/merge_conflict2.xlsx"
+    f1 = "test_files/123-ABC.xlsx"
+    f2 = "test_files/123-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, resolve='new', backup=False)
-    actual = read(ofile)['Sheet1']
-    assert_frame_equal(actual, expected2)
+    actual = read(ofile, index_col=0)['Sheet1']
+    assert_frame_equal(actual, expected_accept_second)

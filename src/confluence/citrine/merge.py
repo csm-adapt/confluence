@@ -47,8 +47,10 @@ def convert(
     if backup:
         archive(dest)
     # generate command
+
     if os.path.isfile(dest):
         files = [dest] + files
+
     args = ["--index-column", str(index),
             "--merge-method", resolve,
             "--output", dest] + files

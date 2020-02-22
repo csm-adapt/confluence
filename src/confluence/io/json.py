@@ -43,6 +43,7 @@ def write(fname, df, **kwds):
             file, ext = os.path.splitext(fname)
             fname = file + '_' + key + ext if len(df.keys()) > 1 else fname
             with open(fname, 'w+') as outfile:
+                _logger.info(f"Writing {key} to {fname}.")
                 jsonfile = df[key].to_json()
                 json.dump(jsonfile, outfile)
 

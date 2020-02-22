@@ -16,6 +16,7 @@ def read(fname, **kwds):
         Container object.
     """
     try:
+        kwds['sep'] = kwds.get('sep', '\t')
         _logger.debug(f"Reading text file {fname}")
         df = pd.read_csv(fname, **kwds)
         return {'text': df}
@@ -36,10 +37,12 @@ def write(fname, df, **kwds):
     Returns:
         None
     """
+    kwds['sep'] = kwds.get('sep', '\t')
     if isinstance(df, (OrderedDict, dict)):
         for key in df.keys():
             file, ext = os.path.splitext(fname)
             fname = file + '_' + key + ext if len(df.keys()) > 1 else fname
+            _logger.info(f"Writing {key} to {fname}.")
             df[key].to_csv(fname, **kwds)
 
     else:
