@@ -4,6 +4,8 @@ import argparse
 import logging
 from confluence.core.setup import setup_logging
 from ..projects.qualitymade import validate_dataframe
+from ..core.validator import check_unique_index
+from ..core.validator import check_for_missing_index
 from confluence.io import read
 
 
@@ -97,7 +99,12 @@ def main(args):
     _logger.debug(f"Reading files: {args.filelist}")
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k, v in od.items():
-            validate_dataframe(v, fname, k)
+            if not check_unique_index(v, fname):
+                raise ValueError(f"Duplicate index in file '{fname}'")
+            if not check_for_missing_index(v, fname):
+                raise ValueError(f"Missing index in file '{fname}'")
+
+            # validate_dataframe(v, fname, k)
 
 
 def run():

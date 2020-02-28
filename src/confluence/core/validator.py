@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class QMDataFrameValidator(object):
     """
     Function: Sets up a series of functions that take in a
