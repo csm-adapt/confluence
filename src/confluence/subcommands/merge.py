@@ -25,7 +25,7 @@ from collections import OrderedDict
 from enum import Enum, auto
 from ..core.setup import setup_logging
 from ..io import read, write
-from confluence.core.validate import validate_dataframe
+from confluence.subcommands.validate import validate_dataframe
 
 
 __author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
