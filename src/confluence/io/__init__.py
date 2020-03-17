@@ -1,11 +1,13 @@
 import os
 from enum import Enum, auto
-from .excel import read as read_excel
-from .excel import write as write_excel
+from .qualitymade.excel import read as read_excel
+from .qualitymade.build import read as read_build_log
+from .qualitymade.excel import write as write_excel
 
 
 class FileFormat(Enum):
     EXCEL = auto()
+    BUILD_LOG = auto()
 
 
 def guess_format(filename):
@@ -20,12 +22,14 @@ def guess_format(filename):
     """
     basename, ext = os.path.splitext(filename)
     return {
+        '.doc': FileFormat.BUILD_LOG,
         '.xlsx': FileFormat.EXCEL
     }[ext.lower()]
 
 
 def read(filename, **kwds):
     return {
+        FileFormat.BUILD_LOG: read_build_log,
         FileFormat.EXCEL: read_excel
     }[guess_format(filename)](filename, **kwds)
 

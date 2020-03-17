@@ -19,7 +19,7 @@ Note: This skeleton file can be safely removed if not needed!
 
 import sys
 import argparse
-import functools
+from functools import reduce, partial
 import logging
 import numpy as np
 from collections import OrderedDict
@@ -54,37 +54,28 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
-
-    # Original function
-
-    # left = lhs.combine_first(rhs).sort_index()
-    # right = rhs.combine_first(lhs).sort_index()
-    # equal = left.equals(right)
-    # if equal:
-    #     return left
-    # else:
-    #     _logger.debug(f"{left == right}")
-    #     if resolution is MergeMethod.FIRST:
-    #         return left
-    #     elif resolution is MergeMethod.SECOND:
-    #         return right
-    #     else:
-    #         raise ValueError("An unresolved merge conflict was identified.")
-    #
-    # ===============================
-    # New function, with dict instead of if statements
-
+    def key_preference(lhs, rhs):
+        left = lhs.columns.to_list()
+        right = rhs.columns.to_list()
+        return {
+            "left": left + list(sorted(set(left + right) - set(right))),
+            "right": right + list(sorted(right + left) - set(left))
+        }
+    # keys
+    pref = key_preference(lhs, rhs)
+    # check merge
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
     equal = left.equals(right)
     if equal:
-        return left
+        return left[pref["left"]]
     else:
         _logger.debug(f"{left == right}")
-        try:
-            return {MergeMethod.FIRST: left,
-                    MergeMethod.SECOND: right}[resolution]
-        except KeyError:
+        if resolution is MergeMethod.FIRST:
+            return left[pref["left"]]
+        elif resolution is MergeMethod.SECOND:
+            return right[pref["right"]]
+        else:
             raise ValueError("An unresolved merge conflict was identified.")
 
 
@@ -192,8 +183,7 @@ def main(args):
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
     for k, v in data.items():
-        data[k] = functools.reduce(
-            lambda lhs, rhs: merge(lhs, rhs, args.resolve), data[k])
+        data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")

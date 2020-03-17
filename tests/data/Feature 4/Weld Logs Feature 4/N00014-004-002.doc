@@ -1,0 +1,97 @@
+\\\Identification Information\\\
+Sample No: N00014-004-002
+Date: 2020-01-09
+Time: 09:36:10
+Operator: JHP
+--------------------------------
+
+\\\Robot Data\\\
+6700-112611
+ROBOTWARE_6.10.1039
+6.10.01.00
+IRB 6700-155/2.85
+6700-112611
+----------------
+
+\\\Laser Equipment Data\\\
+Optical Channel: 1
+--------------------------
+
+\\\Summary\\\
+Total Length: 248.51
+Measured Pre-Time: 6.024
+Measured Weld Time: 128.964
+Pre-Run Temp (C): 24.00
+Laser Power (W): 3000
+Robot Travel Speed (mm/s): 2.000
+Wire Power (kW): 0.150
+Wire Feed Speed (mm/s): 25.80
+Starting O2 ppm: 14
+Ending O2 ppm: 14
+-------------
+
+\\\Pre-Weld Data\\\
+PreTime Recorded (s): 6.02
+Gas Purge Time (s): 5.00
+Gas Pre-Flow Time (s): 3.00
+-------------------
+
+\\\Weld Ignition Stage Data\\\
+Laser Pre-Time (s): 0.40
+Laser Start Move Delay (s): 0.20
+Direct Laser Power Control
+Laser Power (W): 6000
+Weld Power Source/Hotwire Mode: 485
+Wire Power (kW): 0.300
+Wobbler Program: 0
+Program Description: Null
+Wobbler Frequency (Hz): 0.00
+Wobbler Amplitude (mm): 0.00
+------------------------------
+
+\\\Weld Main Stage Data\\\
+Direct Laser Power Control
+Laser Power (W): 3000
+Travel Speed (mm/s): 2.000
+Weld Power Source/Hotwire Mode: 485
+Wire Power (kW): 0.150
+Heat Wirefeed Speed (mm/s): 25.80
+Wobbler Program: 0
+Program Description: Null
+Wobbler Frequency (Hz): 0
+Wobbler Amplitude (mm): 0.00
+--------------------------
+
+\\\Weld Fill Stage Data\\\
+Fill Time (s): 0.25
+Direct Laser Power Control
+Laser Power (W): 6000
+Weld Power Source/Hotwire Mode: 485
+Wire Power (kW): 0.300
+Heat Wirefeed Speed (mm/s): 10.00
+Wobbler Program: 0
+Program Description: Null
+Wobbler Frequency (Hz): 0.00
+Wobbler Amplitude (mm): 0.00
+--------------------------
+
+\\\Weld End Stage Data\\\
+Direct Laser Power Control
+Laser Power (W): 6000
+Weld Power Source/Hotwire Mode: 485
+Wire Power (kW): 0.300
+Heat Wirefeed Speed (mm/s): 30.00
+Wobbler Program: 0
+Program Description: Null
+Wobbler Frequency (Hz): 0.00
+Wobbler Amplitude (mm): 0.00
+-------------------------
+
+\\\Post-Weld Data\\\
+Pull Out Dist (mm): 8.00
+Burn Back Time (s): 0.00
+Laser Off Delay (s): 0.25
+Roll Back Time (s): 0.02
+Gas Off Delay (s): 0.00
+--------------------
+
