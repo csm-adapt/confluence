@@ -26,6 +26,7 @@ def read(fname, **kwds):
     except KeyError:
         raise ValueError(f'Index column <{kwds["index_col"]}> is not in dataframe')
 
+
 def write(fname, df, **kwds):
     """
     Write the Container, or OrderedDict of Containers, to a file.
