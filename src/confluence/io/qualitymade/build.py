@@ -4,6 +4,7 @@ from confluence.core.container import Container
 import logging
 _logger = logging.getLogger(__name__)
 
+
 # # Set up a class that parses the Wolf .doc (.txt) formatted output file
 class WolfDoc(dict):
     """
@@ -167,17 +168,23 @@ def read(fname, **kwds):
     the filename is used as the sample name.
 
     :param fname: Filename name or file object to be read.
-    :param kwds: Optional keywords to control reading. Currently ignored.
+    :param kwds: Optional keywords passed to DataFrame-like Container.
     :return: pandas DataFrame-like Container.
     """
     _logger.info(f"Reading Quality Made-formatted log file {fname}.")
-    doc = WolfDoc().\
-        load(fname).\
-        sort_columns().\
-        rename_column('Identification Information: Sample No', 'Sample Name').\
-        add_column('Parent Sample Name').\
-        move('Sample Name', pos=0).\
-        move('Parent Sample Name', pos=1)
+    doc = WolfDoc()\
+        .load(fname)\
+        .sort_columns()\
+        .rename_column('Identification Information: Sample No', 'Sample Name')\
+        .add_column('Parent Sample Name')\
+        .move('Sample Name', pos=0)\
+        .move('Parent Sample Name', pos=1)
     if doc.container.loc[0, "Sample Name"] == '':
-        doc.container.loc[0, 'Sample Name'] = fname
+        doc.container.loc[0, "Sample Name"] = fname
+    # map read options to DataFrame options
+    options = {}
+    if "index_col" in kwds:
+        index = doc.container.columns.to_list()[kwds["index_col"]]
+        doc.container.set_index(index, inplace=True)
+    # done
     return doc.container

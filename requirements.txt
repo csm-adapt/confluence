@@ -5,6 +5,7 @@
 # numpy==1.13.3
 # scipy==1.0
 
+kivy >= 1.11
 numpy >= 1.17
 openpyxl >= 3.0
 pandas >= 0.25
