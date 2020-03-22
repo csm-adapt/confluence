@@ -1,8 +1,9 @@
 import os
 import logging
 from enum import Enum, auto
-from .excel import read as read_excel
-from .excel import write as write_excel
+from .qualitymade.excel import read as read_excel
+from .qualitymade.build import read as read_build_log
+from .qualitymade.excel import write as write_excel
 from .json import read as read_json
 from .json import write as write_json
 from .csv import read as read_csv
@@ -17,6 +18,7 @@ class FileFormat(Enum):
     JSON = auto()
     CSV = auto()
     TEXT = auto()
+    BUILD_LOG = auto()
 
 
 def guess_format(filename):
@@ -35,7 +37,8 @@ def guess_format(filename):
         '.xlsx': FileFormat.EXCEL,
         '.json': FileFormat.JSON,
         '.csv': FileFormat.CSV,
-        '.txt': FileFormat.TEXT
+        '.txt': FileFormat.TEXT,
+        '.doc': FileFormat.BUILD_LOG
     }[ext.lower()]
     _logger.debug(f"File format of {basename} was identified as {str(fmt)}.")
     return fmt
@@ -51,7 +54,8 @@ def read(filename, **kwds):
         FileFormat.EXCEL: read_excel,
         FileFormat.JSON: read_json,
         FileFormat.CSV: read_csv,
-        FileFormat.TEXT: read_text
+        FileFormat.TEXT: read_text,
+        FileFormat.BUILD_LOG: read_build_log
     }[guess_format(filename)](filename, **kwds)
 
 
@@ -62,4 +66,3 @@ def write(filename, df, **kwds):
         FileFormat.CSV: write_csv,
         FileFormat.TEXT: write_text
     }[guess_format(filename)](filename, df, **kwds)
-

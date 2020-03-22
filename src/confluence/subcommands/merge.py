@@ -19,7 +19,7 @@ Note: This skeleton file can be safely removed if not needed!
 
 import sys
 import argparse
-import functools
+from functools import reduce, partial
 import logging
 from collections import OrderedDict
 from enum import Enum, auto
@@ -29,8 +29,8 @@ from confluence.core.validate import validate_dataframe
 from confluence.core.validate import validate_files
 
 
-__author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
-__copyright__ = "KMMD, LLC."
+__author__ = "Branden Kappes"
+__copyright__ = "Branden Kappes"
 __license__ = "mit"
 
 _logger = logging.getLogger(__name__)
@@ -56,17 +56,28 @@ def merge(lhs, rhs, resolution=None):
         Merged data.
     """
 
+    def key_preference(lhs, rhs):
+        left = lhs.columns.to_list()
+        right = rhs.columns.to_list()
+        return {
+            "left": left + list(sorted(set(left + right) - set(right))),
+            "right": right + list(sorted(set(right + left) - set(left)))
+        }
+    # keys
+    pref = key_preference(lhs, rhs)
+    # check merge
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
     equal = left.equals(right)
     if equal:
-        return left
+        return left[pref["left"]]
     else:
         _logger.debug(f"{left == right}")
-        try:
-            return {MergeMethod.FIRST: left,
-                    MergeMethod.SECOND: right}[resolution]
-        except KeyError:
+        if resolution is MergeMethod.FIRST:
+            return left[pref["left"]]
+        elif resolution is MergeMethod.SECOND:
+            return right[pref["right"]]
+        else:
             raise ValueError("An unresolved merge conflict was identified.")
 
 
@@ -173,17 +184,20 @@ def main(args):
     _logger.debug(f"Validating files: {args.filelist}")
     validate_files(args.filelist)
     data = OrderedDict()
-    for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
-        for k,v in od.items():
-            v = validate_dataframe(v, fname, k)
-            data[k] = data.get(k, []) + [v]
+    for od in [read(fname, index_col=args.index) for fname in args.filelist]:
+        if isinstance(od, (OrderedDict, dict)):
+            for k,v in od.items():
+                v = validate_dataframe(v, fname, k)
+                data[k] = data.get(k, []) + [v]
+        else:
+            v = validate_dataframe(v)
+            data['merged'] = data.get('merged', []) + [od]
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
     for k, v in data.items():
-        data[k] = functools.reduce(
-            lambda lhs, rhs: merge(lhs, rhs, args.resolve), data[k])
-        data[k] = validate_dataframe(data[k], args.output ,k) if args.validate else data[k]
+        data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
+        data[k] = validate_dataframe(data[k], args.output, k) if args.validate else data[k]
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")

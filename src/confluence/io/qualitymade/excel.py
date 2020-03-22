@@ -19,7 +19,8 @@ def read(fname, **kwds):
         'sheet_name': None
     }
     options.update(kwds)
-    _logger.debug(f"Reading excel file {fname} with options: {options}")
+    _logger.info(f"Reading Excel-formatted file {fname} "
+                 f"with options: {options}")
     return pd.read_excel(fname, **options)
 
 

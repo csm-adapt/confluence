@@ -124,13 +124,14 @@ def main(args):
 def run():
     """Entry point for console_scripts
     """
-    try:
-        main(sys.argv[1:])
-    except Exception as e:
-        _logger.error(f"Confluence failed: ({str(e)}).")
-        _logger.error("Try setting --index-column to ensure the "
-                      "index is set properly.")
-        sys.exit(1)
+    main(sys.argv[1:])
+    # try:
+    #     main(sys.argv[1:])
+    # except Exception as e:
+    #     _logger.error(f"Confluence failed: ({str(e)}).")
+    #     _logger.error("Try setting --index-column to ensure the "
+    #                   "index is set properly.")
+    #     sys.exit(1)
 
 
 if __name__ == "__main__":
