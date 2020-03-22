@@ -26,6 +26,7 @@ from enum import Enum, auto
 from ..core.setup import setup_logging
 from ..io import read, write
 from confluence.core.validate import validate_dataframe
+from confluence.core.validate import validate_files
 
 
 __author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
@@ -169,7 +170,8 @@ def main(args):
     setup_logging(args.loglevel)
     _logger.debug(f"Starting merge operation...")
     # read input files
-    _logger.debug(f"Reading files: {args.filelist}")
+    _logger.debug(f"Validating files: {args.filelist}")
+    validate_files(args.filelist)
     data = OrderedDict()
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k,v in od.items():

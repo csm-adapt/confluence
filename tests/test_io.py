@@ -33,8 +33,9 @@ def test_json(expected_accept_first):
            '--index-column', 0,
            '-o', 'test_files/123-ABC.json']
     merge_main(cli)
-    df = read('test_files/123-ABC.json', index_col=0)['JSON']
+    df = list(read('test_files/123-ABC.json', index_col=0).values())[0]
     expected_accept_first.index.name = None
+    expected_accept_first.index = expected_accept_first.index.map(str)
     assert_frame_equal(df, expected_accept_first)
 
 

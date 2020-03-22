@@ -4,6 +4,8 @@ import argparse
 import logging
 from ..core.setup import setup_logging
 from ..io import read
+import urllib.request
+import os
 
 __author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
 __copyright__ = "KMMD, LLC."
@@ -38,6 +40,101 @@ class QMDataFrameValidator(object):
         # if not hasattr('__call__', func):
         # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
         self._callbacks.append(func)
+
+class QMFileValidator(object):
+    """
+    Function: Sets up a series of functions that take in a
+    dataframe, check to see if it has any internal conflicts,
+    and throws an error if one is found.
+    """
+    def __init__(self, errorType):
+        self._callbacks = []
+        self._exit = False
+        self._errorType = errorType
+
+    def __call__(self, filename):
+        """
+        Function: Cycles through each callback, feeding the
+        dataframe to the next function to check for errors.
+        :param df: dataframe to be tested
+        :param filename: Filename corresponding to the dataframe
+        :param sheet: Sheet corresponding to the dataframe
+        :return: dataframe with no errors
+        """
+        status = False  # Marked as 'true' if it passes the tests. This happens if either function in the callback
+        # is true.
+        for callback in self._callbacks:
+            status = callback(filename, status)
+        if status:
+            _logger.info(f"File '{filename}' has been validated.")
+        else:
+            logger(self._errorType)(f"File '{filename}' has failed.")
+            self._exit = True
+
+    def add_callback(self, func):
+        # if not hasattr('__call__', func):
+        # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
+        self._callbacks.append(func)
+
+    def get_exit_status(self):
+        return self._exit
+
+
+def validate_files(filenames, errorType='ERROR', exitCode=1):
+    validate = QMFileValidator(errorType)
+    validate.add_callback(check_file_path_exists)
+    validate.add_callback(check_url_exists)
+    for file in filenames:
+        _logger.info(f"validating {file}")
+        validate(file)
+    if validate.get_exit_status():
+        sys.exit(exitCode)
+
+
+def check_file_path_exists(filename, status):
+    """
+    Functionality: Uses os to see if the file path is valid
+    :param filename: File path/name
+    :param status: Starts as false, if the file path is valid, switches to true.
+    :return:
+    """
+    if os.path.exists(filename):
+        _logger.info(f"File '{filename}' exists within the current working directory")
+        status = True
+    return status
+
+
+def check_url_exists(filename, status):
+    """
+    Functionality: Checks that a given URL exists
+    :param filename: url to be tested
+    :param status: The current status after being tested by the check_file_path_exists function.
+    :return:
+    """
+    try:
+        request = urllib.request.Request(filename)
+        request.get_method = lambda: 'HEAD'
+        urllib.request.urlopen(request)
+        _logger.info(f"File '{filename}' validated as a URL.")
+        return True
+    except (urllib.request.HTTPError, ValueError):
+        _logger.info(f"File '{filename}' not validated as a URL.")
+        return status
+
+
+def logger(type):
+    """
+    Functionality: Returns the correct logger function
+    :param type: Error type to be thrown by the logger.
+    :return: Logger function that corresponds the the type.
+    """
+    return {
+        'DEBUG': _logger.debug,
+        'INFO': _logger.info,
+        'WARNING': _logger.warning,
+        'ERROR': _logger.error,
+        'CRITICAL': _logger.critical
+    }.get(type, 'ERROR')
 
 
 def validate_dataframe(df, filename, sheetname='Sheet1'):
@@ -83,12 +180,15 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
         raise ValueError(f"Empty index cell in file '{filename}' "
                          f"in sheet '{sheetname}' "
                          f"in column '{df.index.name}'")
+    _logger.info(f"Dataframe from file {filename} in sheetname {sheetname} has passed "
+                  f"'check_for_sample_name_completeness' with no empty cells.")
     return df
 
 
 def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     """
-   Functionality: Makes sure there are no repeated sample names, similar to the 'check_for_merge_conflict' function
+   Functionality: Makes sure there are no repeated sample names,
+   similar to the 'check_for_merge_conflict' function
    :param df: dataframe to check
    :param filename: name of the file
    :param sheetname: name of the sheet
@@ -103,6 +203,8 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
                              f"in sheet '{sheetname}' "
                              f"in column '{df.index.name}'")
     return df
+
+
 
 
 def parse_args(args):
@@ -169,7 +271,7 @@ def postprocess_cli(args):
 def main(args):
     """Main entry point allowing external calls to validate files
     Function: Takes an argparse command and validates each file.
-    As of 2/21/2020, it does not change any files that are given
+    As of 2/21/2020, it does not change any files that are given.
     If the file has an internal conflict, it raises a ValueError
     that tells which file, sheet, and column is responsible.
 
@@ -185,7 +287,8 @@ def main(args):
     setup_logging(args.loglevel)
     _logger.debug(f"Starting validate operation...")
     # read input files
-    _logger.debug(f"Reading files: {args.filelist}")
+    _logger.debug(f"Validating files: {args.filelist}")
+    validate_files(args.filelist)
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k, v in od.items():
             validate_dataframe(v, fname, k)

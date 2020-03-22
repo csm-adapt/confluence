@@ -29,6 +29,7 @@ def guess_format(filename):
     Returns:
         File format defined in FileFormat.
     """
+    # TODO: Return tuple of valid project-specific readers
     basename, ext = os.path.splitext(filename)
     fmt = {
         '.xlsx': FileFormat.EXCEL,
@@ -41,6 +42,10 @@ def guess_format(filename):
 
 
 def read(filename, **kwds):
+    # TODO: Add for-loop with try/except statements to test each read function
+    # TODO: Record project from successful read for subsequent write
+    # TODO: Create IO class in the init file. Set read, write formats to None.
+    #  If write is None and read is not, set 'write' to the same format as 'read'
     _logger.debug(f"Reading {filename}, with keywords {kwds}")
     return {
         FileFormat.EXCEL: read_excel,
@@ -57,3 +62,4 @@ def write(filename, df, **kwds):
         FileFormat.CSV: write_csv,
         FileFormat.TEXT: write_text
     }[guess_format(filename)](filename, df, **kwds)
+

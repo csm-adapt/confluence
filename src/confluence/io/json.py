@@ -20,8 +20,14 @@ def read(fname, **kwds):
         with open(fname) as json_file:
             data = json.load(json_file)
         _logger.debug(f"Reading JSON file {fname}")
-        df = pd.read_json(data)
-        return {'JSON': df}
+        dfod = {}
+        try:
+            for k, v in data.items():
+                _logger.debug(f"Adding sheet {k} to 'dfod'")
+                dfod[k] = pd.DataFrame(v)
+            return dfod
+        except:
+            return pd.DataFrame(data)
 
     except KeyError:
         raise ValueError(f'Index column <{kwds["index_col"]}> is not in dataframe')
@@ -40,13 +46,10 @@ def write(fname, df, **kwds):
         None
     """
     if isinstance(df, (OrderedDict, dict)):
-        for key in df.keys():
-            file, ext = os.path.splitext(fname)
-            fname = file + '_' + key + ext if len(df.keys()) > 1 else fname
-            with open(fname, 'w+') as outfile:
-                _logger.info(f"Writing {key} to {fname}.")
-                jsonfile = df[key].to_json()
-                json.dump(jsonfile, outfile)
+        with open(fname, 'w+') as outfile:
+            for k, v in df.items():
+                _logger.info(f"Writing {v} to {k} in {fname}.")
+            json.dump({k: v.to_dict() for k, v in df.items()}, outfile)
 
     else:
         _logger.debug(f"Writing {df.shape} dataframe to {fname}.")
