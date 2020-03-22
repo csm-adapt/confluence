@@ -25,7 +25,8 @@ from .subcommands.merge import parse_args as merge_parse_args
 from .subcommands.merge import main as merge_main
 from .core.validate import parse_args as validate_parse_args
 from .core.validate import main as validate_main
-from .core.validate import validate_dataframe as validate
+from confluence.subcommands.list import parse_args as list_parse_args
+#from confluence.subcommands.list import main as list_main
 
 from confluence import __version__
 
@@ -77,6 +78,10 @@ def parse_args(args):
         help="Check file(s) for internal merge conflicts")
     validate_parser.set_defaults(func=validate_main)
     validate_parse_args(validate_parser)
+    # list
+    list_parser = subparsers.add_parser('list',
+        help="Provide list of some aspect within files (such as duplicated sample names)")
+    list_parse_args(list_parser)
     # add options for this application
     parser.add_argument(
         '--version',

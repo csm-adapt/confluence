@@ -41,6 +41,7 @@ class QMDataFrameValidator(object):
         # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
         self._callbacks.append(func)
 
+
 class QMFileValidator(object):
     """
     Function: Sets up a series of functions that take in a
