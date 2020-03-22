@@ -12,12 +12,14 @@ from confluence.io import read
 import glob
 _logger = logging.getLogger(__name__)
 
+
 @pytest.fixture()
 def expected1():
     return pd.DataFrame({
         'foo': [1,2,3,4],
         'bar': ['A', 'B', 'C', 'D'],
     }).set_index('foo')
+
 
 @pytest.fixture()
 def expected2():
