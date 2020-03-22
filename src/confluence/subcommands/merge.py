@@ -59,7 +59,7 @@ def merge(lhs, rhs, resolution=None):
         right = rhs.columns.to_list()
         return {
             "left": left + list(sorted(set(left + right) - set(right))),
-            "right": right + list(sorted(right + left) - set(left))
+            "right": right + list(sorted(set(right + left) - set(left)))
         }
     # keys
     pref = key_preference(lhs, rhs)
@@ -177,8 +177,11 @@ def main(args):
     _logger.debug(f"Reading files: {args.filelist}")
     data = OrderedDict()
     for od in [read(fname, index_col=args.index) for fname in args.filelist]:
-        for k,v in od.items():
-            data[k] = data.get(k, []) + [v]
+        if isinstance(od, (OrderedDict, dict)):
+            for k,v in od.items():
+                data[k] = data.get(k, []) + [v]
+        else:
+            data['merged'] = data.get('merged', []) + [od]
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")

@@ -1,0 +1,205 @@
+#  __________________________
+# |     output filename      |
+# |--------------------------|
+# | 0 | metadata.xlsx        |
+# | 1 | build log file 1.doc |
+# | ...                      |
+# | N | log file N.doc       |
+# |--------------------------|
+# |   merge  |    cancel     |
+#  --------------------------
+
+##:import C kivy.utils.get_color_from_hex
+##:import expanduser os.path.expanduser
+
+#:set background (0.0, 0.2, 0.9, 0.3)
+#:set fieldHeight 48
+
+MainWindow:
+    id: main
+    orientation: 'vertical'
+    BoxLayout:
+        id: outputQuery
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 1.5*fieldHeight
+        padding: [2, 2]
+        Button:
+            size_hint_x: None
+            width: 4*outputQuery.height
+            text: 'Set Output'
+            on_release: root.show_save()
+        Label:
+            text: root.ofile
+
+    Button:
+        size_hint_y: None
+        height: fieldHeight
+        padding: [2, 2]
+        text: 'Add Inputs'
+        on_release: root.show_load()
+            
+    RecycleView:
+        id: rv
+        padding: [2, 2]
+        data: root.ifiles
+        viewclass: 'MoveButtons'
+        # do_scroll_x: True
+        scroll_timeout: 100
+        size_hint: 1, 1
+        RecycleBoxLayout:
+            orientation: 'vertical'
+            default_size_hint: 1, None
+            default_size: None, dp(fieldHeight)
+            size_hint_y: None
+            height: self.minimum_height
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: fieldHeight
+        Button:
+            padding: [2, 2]
+            size_hint_y: None
+            height: fieldHeight
+            text: 'Merge'
+            on_release: root.merge()
+        Button:
+            padding: [2, 2]
+            size_hint_y: None
+            height: fieldHeight
+            text: 'Exit'
+            on_release: root.exit()
+
+# ########## Define Classes ########## #
+
+<MoveButtons@BoxLayout>:
+    unique: ''
+    index: -1
+    orientation: 'horizontal'
+    padding: [2, 2, 2, 2]
+    # Draw a background to indicate selection
+    canvas.before:
+        Color:
+            rgba: background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    IconButton:
+        source: 'resources/x-white.png'
+        size_hint: None, None
+        size: root.height, root.height
+        valign: 'middle'
+        on_press: app.root.remove(root.index)
+    Label:
+        size_hint_x: None
+        width: fieldHeight
+        markup: True
+        text: '[b]{}[/b]'.format(root.index)
+    Label:
+        text: root.unique
+    IconButton:
+        id: to_bottom
+        source: 'resources/dndn-white.png'
+        size_hint_x: None
+        width: root.height
+        valign: 'middle'
+        on_press: app.root.move(root.index, None)
+    IconButton:
+        id: move_down
+        source: 'resources/dn-white.png'
+        size_hint_x: None
+        width: root.height
+        valign: 'middle'
+        on_press: app.root.move(root.index, root.index + 1)
+    TextInput:
+        id: enter_index
+        halign: 'center'
+        multiline: False
+        hint_text: '#'
+        size_hint_x: None
+        width: root.height
+        on_text_validate: app.root.move(root.index, self.text)
+    IconButton:
+        id: move_up
+        source: 'resources/up-white.png'
+        size_hint_x: None
+        width: root.height
+        valign: 'middle'
+        on_press: app.root.move(root.index, root.index - 1)
+    IconButton:
+        id: to_top
+        source: 'resources/upup-white.png'
+        size_hint_x: None
+        width: root.height
+        valign: 'middle'
+        on_press: app.root.move(root.index, 0)
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        FileChooserListView:
+            id: filechooser
+            multiselect: True
+            path: root.init_directory
+                    
+        BoxLayout:
+            size_hint_y: None
+            height: fieldHeight
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel()
+
+            Button:
+                text: 'Load'
+                on_release: root.load(filechooser.path, filechooser.selection)
+
+<SaveDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: 'vertical'
+        FileChooserListView:
+            id: filechooser
+            path: root.init_directory
+            on_selection: text_input.text = self.selection and self.selection[0] or ''
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: fieldHeight
+            Label:
+                size_hint: 0.2, 0.8
+                text: "Output filename"
+                
+            TextInput:
+                id: text_input
+                text_hint: 'Output Filename'
+                size_hint_y: None
+                height: fieldHeight
+                multiline: False
+    
+        BoxLayout:
+            size_hint_y: None
+            height: fieldHeight
+            Button:
+                text: 'Cancel'
+                on_release: root.cancel()
+
+            Button:
+                text: 'Set Output'
+                on_release: root.save(filechooser.path, text_input.text)
+
+<StatusMessage>:
+    text: ''
+    Label:
+        size_hint: 1, 1
+        text: root.text
+
+    Button:
+        size_hint_y: None
+        height: fieldHeight
+        text: "OK"
+        on_release: app.root.dismiss_popup()
