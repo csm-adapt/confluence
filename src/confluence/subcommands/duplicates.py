@@ -105,7 +105,7 @@ def check_for_duplicates(df, fname, sheet):
     _logger.info(f'Finding duplicates in for file {fname}, sheet {sheet}')
     indexes = list(df.index)
     for duplicate in set([x for x in indexes if indexes.count(x) > 1]):
-        _logger.warning(f"Duplicated row '{duplicate}' found in file {fname}"
+        _logger.warning(f" Duplicated row '{duplicate}' found in file '{fname}'"
                         f"in sheet '{sheet}'.")
 
 

@@ -43,7 +43,7 @@ def parse_args(args):
     subparsers.required = True
     # duplicates
     duplicates_parser = subparsers.add_parser('duplicates',
-        help="Merge the contents of two or more files.")
+        help="List duplicate sample names, if any.")
     duplicates_parser.set_defaults(func=duplicates_main)
     duplicates_parse_args(duplicates_parser)
 
