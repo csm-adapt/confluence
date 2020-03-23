@@ -138,7 +138,7 @@ def logger(type):
     }.get(type, 'ERROR')
 
 
-def validate_dataframe(df, filename, sheetname='Sheet1'):
+def validate_dataframe(df):
     """
    Function: This sets up a validator. What this does is checks to make sure each file won't conflict against itself.
 
@@ -164,10 +164,10 @@ def validate_dataframe(df, filename, sheetname='Sheet1'):
     validate = QMDataFrameValidator()
     validate.add_callback(check_for_sample_name_completeness)
     validate.add_callback(check_for_sample_name_uniqueness)
-    return validate(df, filename, sheetname)
+    return validate(df)
 
 
-def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
+def check_for_sample_name_completeness(df):
     """
    Function: Checks the first column for empty cells. If there is an empty cell, throw an error. Otherwise, return
    the original dataframe
@@ -178,10 +178,9 @@ def check_for_sample_name_completeness(df, filename, sheetname='Sheet1'):
    :return: dataframe with all entries in the 'column' filled. If there is an empty one, an error is thrown.
    """
     if any(pd.isna(df.index)):
-        raise ValueError(f"Empty index cell in file '{filename}' "
-                         f"in sheet '{sheetname}' "
-                         f"in column '{df.index.name}'")
-    _logger.info(f"Dataframe from file {filename} in sheetname {sheetname} has passed "
+        raise ValueError()
+    else:
+        _logger.info(f"Dataframe from file {filename} in sheetname {sheetname} has passed "
                   f"'check_for_sample_name_completeness' with no empty cells.")
     return df
 

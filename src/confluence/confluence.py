@@ -28,7 +28,7 @@ from .core.validate import main as validate_main
 from confluence.subcommands.list import parse_args as list_parse_args
 #from confluence.subcommands.list import main as list_main
 
-from confluence import __version__
+from ..confluence import __version__
 
 __author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
 __copyright__ = "KMMD, LLC."
