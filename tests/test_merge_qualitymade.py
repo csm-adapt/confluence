@@ -10,14 +10,14 @@ _logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def old_log():
-    return read("tests/data/LHW-build.xlsx").set_index("Sample Name")
+    return read("data/Feature 4/LHW-build.xlsx")['build'].set_index("Sample Name")
 
 
 @pytest.fixture
 def merged_features():
     logs = [read(log).set_index("Sample Name")
             for log
-            in sorted(glob('tests/data/Feature 4/Weld Logs Feature 4/*.doc'))]
+            in sorted(glob('data/Feature 4/Weld Logs Feature 4/*.doc'))]
     return reduce(partial(merge, resolution=MergeMethod.SECOND), logs)
 
 

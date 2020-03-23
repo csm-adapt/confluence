@@ -23,7 +23,7 @@ class QMDataFrameValidator(object):
     def __init__(self):
         self._callbacks = []
 
-    def __call__(self, df, filename, sheet='Sheet1'):
+    def __call__(self, df):
         """
         Function: Cycles through each callback, feeding the
         dataframe to the next function to check for errors.
@@ -33,7 +33,7 @@ class QMDataFrameValidator(object):
         :return: dataframe with no errors
         """
         for callback in self._callbacks:
-            df = callback(df, filename, sheet)
+            df = callback(df)
         return df
 
     def add_callback(self, func):
@@ -50,7 +50,6 @@ class QMFileValidator(object):
     """
     def __init__(self, errorType):
         self._callbacks = []
-        self._exit = False
         self._errorType = errorType
 
     def __call__(self, filename):
@@ -62,37 +61,50 @@ class QMFileValidator(object):
         :param sheet: Sheet corresponding to the dataframe
         :return: dataframe with no errors
         """
-        status = False  # Marked as 'true' if it passes the tests. This happens if either function in the callback
-        # is true.
         for callback in self._callbacks:
-            status = callback(filename, status)
-        if status:
-            _logger.info(f"File '{filename}' has been validated.")
-        else:
-            logger(self._errorType)(f"File '{filename}' has failed.")
-            self._exit = True
+            if callback(filename):
+                _logger.info(f"File '{filename}' exists.")
+                return
+        self.logger(self._errorType)(f"File '{filename}' has failed.")
+        raise ValueError()
 
     def add_callback(self, func):
         # if not hasattr('__call__', func):
-        # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
+        #     raise ValueError("Callback functions must have a ‘__call__’ attribute.")
         self._callbacks.append(func)
 
-    def get_exit_status(self):
-        return self._exit
+    def logger(self, type):
+        """
+        Functionality: Returns the correct logger function
+        :param type: Error type to be thrown by the logger.
+        :return: Logger function that corresponds the the type.
+        """
+        return {
+            'DEBUG': _logger.debug,
+            'INFO': _logger.info,
+            'WARNING': _logger.warning,
+            'ERROR': _logger.error,
+            'CRITICAL': _logger.critical
+        }.get(type.upper(), 'ERROR')
 
 
-def validate_files(filenames, errorType='ERROR', exitCode=1):
+def validate_files(filenames, errorType='ERROR'):
     validate = QMFileValidator(errorType)
     validate.add_callback(check_file_path_exists)
     validate.add_callback(check_url_exists)
+    error = False
     for file in filenames:
-        _logger.info(f"validating {file}")
-        validate(file)
-    if validate.get_exit_status():
-        sys.exit(exitCode)
+        try:
+            _logger.info(f"Validating {file}")
+            validate(file)
+        except ValueError:
+            error = True
+    if error:
+        raise ValueError
 
 
-def check_file_path_exists(filename, status):
+
+def check_file_path_exists(filename):
     """
     Functionality: Uses os to see if the file path is valid
     :param filename: File path/name
@@ -101,11 +113,13 @@ def check_file_path_exists(filename, status):
     """
     if os.path.exists(filename):
         _logger.info(f"File '{filename}' exists within the current working directory")
-        status = True
-    return status
+        return True
+    else:
+        _logger.info(f"File '{filename}' does not exist within the current working directory")
+        return False
 
 
-def check_url_exists(filename, status):
+def check_url_exists(filename):
     """
     Functionality: Checks that a given URL exists
     :param filename: url to be tested
@@ -120,22 +134,10 @@ def check_url_exists(filename, status):
         return True
     except (urllib.request.HTTPError, ValueError):
         _logger.info(f"File '{filename}' not validated as a URL.")
-        return status
+        return False
 
 
-def logger(type):
-    """
-    Functionality: Returns the correct logger function
-    :param type: Error type to be thrown by the logger.
-    :return: Logger function that corresponds the the type.
-    """
-    return {
-        'DEBUG': _logger.debug,
-        'INFO': _logger.info,
-        'WARNING': _logger.warning,
-        'ERROR': _logger.error,
-        'CRITICAL': _logger.critical
-    }.get(type, 'ERROR')
+
 
 
 def validate_dataframe(df):
@@ -180,12 +182,11 @@ def check_for_sample_name_completeness(df):
     if any(pd.isna(df.index)):
         raise ValueError()
     else:
-        _logger.info(f"Dataframe from file {filename} in sheetname {sheetname} has passed "
-                  f"'check_for_sample_name_completeness' with no empty cells.")
+        _logger.info(f"Dataframe {df} passed")
     return df
 
 
-def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
+def check_for_sample_name_uniqueness(df):
     """
    Functionality: Makes sure there are no repeated sample names,
    similar to the 'check_for_merge_conflict' function
@@ -199,9 +200,8 @@ def check_for_sample_name_uniqueness(df, filename, sheetname='Sheet1'):
     for key in temp:
         instances = temp[key].nunique()
         if instances > 1:
-            raise ValueError(f"Duplicate entry in file '{filename}' "
-                             f"in sheet '{sheetname}' "
-                             f"in column '{df.index.name}'")
+            raise ValueError()
+    _logger.info(f"Dataframe {df} has no repeated sample names")
     return df
 
 

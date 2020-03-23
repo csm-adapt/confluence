@@ -182,7 +182,11 @@ def main(args):
     _logger.debug(f"Starting merge operation...")
     # read input files
     _logger.debug(f"Validating files: {args.filelist}")
-    validate_files(args.filelist)
+    try:
+        validate_files(args.filelist)
+    except ValueError:
+        sys.exit(0)
+
     data = OrderedDict()
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         if isinstance(od, (OrderedDict, dict)):
@@ -190,8 +194,9 @@ def main(args):
                 try:
                     v = validate_dataframe(v)
                     data[k] = data.get(k, []) + [v]
-                except ValueError():
-                    raise ValueError(f"Empty index cell in file '{fname}' "
+                    _logger.info(f"Dataframe from file {fname} in sheetname {k} has passed validating")
+                except ValueError:
+                    raise ValueError(f"Empty or duplicated cell in file '{fname}' "
                                      f"in sheet '{k}' "
                                      f"in column '{v.index.name}'")
         else:

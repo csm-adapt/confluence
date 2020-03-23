@@ -4,11 +4,11 @@ import logging
 from pandas.testing import assert_frame_equal
 import os
 from confluence.subcommands.merge import main as merge_main
-# from confluence.subcommands.merge import merge as merge_merge
-# from confluence.subcommands.merge import MergeMethod
-# from confluence.subcommands.duplicates import main as duplicates_main
-# from confluence.confluence import main as confluence_main
-# from confluence.io import read
+from confluence.subcommands.merge import merge as merge_merge
+from confluence.subcommands.merge import MergeMethod
+from confluence.subcommands.duplicates import main as duplicates_main
+from confluence.confluence import main as confluence_main
+from confluence.io import read
 _logger = logging.getLogger(__name__)
 
 
