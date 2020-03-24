@@ -101,7 +101,9 @@ def validate_files(filenames, errorType='ERROR'):
         except ValueError:
             e = True
             continue
+            #  Only raises error at the end
     if e:
+        _logger.info("One or more files failed validation")
         raise ValueError()
 
 
