@@ -6,6 +6,7 @@ from ..core.setup import setup_logging
 from ..io import read
 import urllib.request
 import os
+from collections import OrderedDict
 
 __author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
 __copyright__ = "KMMD, LLC."
@@ -92,15 +93,16 @@ def validate_files(filenames, errorType='ERROR'):
     validate = QMFileValidator(errorType)
     validate.add_callback(check_file_path_exists)
     validate.add_callback(check_url_exists)
-    error = False
+    e = None
     for file in filenames:
         try:
             _logger.info(f"Validating {file}")
             validate(file)
         except ValueError:
-            error = True
-    if error:
-        raise ValueError
+            e = True
+            continue
+    if e:
+        raise ValueError()
 
 
 
@@ -290,9 +292,20 @@ def main(args):
     _logger.debug(f"Validating files: {args.filelist}")
     validate_files(args.filelist)
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
-        for k, v in od.items():
-            validate_dataframe(v, fname, k)
-
+        if isinstance(od, (OrderedDict, dict)):
+            for k, v in od.items():
+                try:
+                    validate_dataframe(v)
+                except ValueError:
+                    raise ValueError(f"Empty or duplicated cell in file '{fname}' "
+                                     f"in sheet '{k}' "
+                                     f"in column '{v.index.name}'")
+        else:
+            try:
+                validate_dataframe(od)
+            except ValueError:
+                raise ValueError(f"Empty or duplicated cell in file '{fname}' "
+                                 f"in column '{od.index.name}'")
 
 def run():
     """Entry point for console_scripts

@@ -186,7 +186,6 @@ def main(args):
         validate_files(args.filelist)
     except ValueError:
         sys.exit(0)
-
     data = OrderedDict()
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         if isinstance(od, (OrderedDict, dict)):
@@ -200,14 +199,23 @@ def main(args):
                                      f"in sheet '{k}' "
                                      f"in column '{v.index.name}'")
         else:
-            v = validate_dataframe(v)
-            data['merged'] = data.get('merged', []) + [od]
+            try:
+                od = validate_dataframe(od)
+                data['merged'] = data.get('merged', []) + [od]
+            except ValueError:
+                raise ValueError(f"Empty or duplicated cell in file '{fname}' "
+                                 f"in column '{od.index.name}'")
     # merge consecutive data frames
     _logger.debug(f"Joining data using {args.resolve} to "
                   "resolve merge conflicts.")
     for k, v in data.items():
-        data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
-        data[k] = validate_dataframe(data[k], args.output, k) if args.validate else data[k]
+        try:
+            data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
+            data[k] = validate_dataframe(data[k]) if args.validate else data[k]
+        except ValueError:
+            raise ValueError(f"Empty or duplicated cell in merged dataframe "
+                             f"in sheet {k}"
+                             f"in column '{v.index.name}'")
     _logger.debug(f"Merged sheets: {list(data.keys())}.")
     # write result
     _logger.debug(f"Writing result to {args.output}.")
