@@ -54,38 +54,22 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
-
-    # Original function
-
-    # left = lhs.combine_first(rhs).sort_index()
-    # right = rhs.combine_first(lhs).sort_index()
-    # equal = left.equals(right)
-    # if equal:
-    #     return left
-    # else:
-    #     _logger.debug(f"{left == right}")
-    #     if resolution is MergeMethod.FIRST:
-    #         return left
-    #     elif resolution is MergeMethod.SECOND:
-    #         return right
-    #     else:
-    #         raise ValueError("An unresolved merge conflict was identified.")
-    #
     # ===============================
     # New function, with dict instead of if statements
-
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
     equal = left.equals(right)
     if equal:
-        return left
+        result = left
     else:
         _logger.debug(f"{left == right}")
         try:
-            return {MergeMethod.FIRST: left,
-                    MergeMethod.SECOND: right}[resolution]
+            result = {MergeMethod.FIRST: left,
+                      MergeMethod.SECOND: right}[resolution]
         except KeyError:
             raise ValueError("An unresolved merge conflict was identified.")
+    # remove duplicate columns, if they exist.
+    return result.T.loc[~result.T.index.duplicated(keep='first'), :].T.shape
 
 
 def parse_args(args):
