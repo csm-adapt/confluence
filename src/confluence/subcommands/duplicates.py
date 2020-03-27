@@ -1,4 +1,10 @@
-import pandas as pd
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+This is a file that contains the functions to list duplicates. It is called with 'confluence list duplicates',
+followed by a list of files. If there are duplicate sample names, it lists them as logger warnings, along with
+the file they came from. If there are none, nothing is printed.
+"""
 import sys
 import argparse
 import logging
@@ -97,17 +103,22 @@ def main(args):
     validate_files(args.filelist)
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         for k, v in od.items():
-            check_for_duplicates(v, fname, k)
+            try:
+                _logger.info(f'Finding duplicates in for file {fname}, sheet {k}')
+                check_for_duplicates(v)
+            except ValueError as e:
+                _logger.warning(f" Duplicated row(s) '{e}' found in file '{fname}' "
+                               f"in sheet '{k}'.")
     _logger.info('Finished searching files for duplicates')
 
 
-def check_for_duplicates(df, fname, sheet):
-    _logger.info(f'Finding duplicates in for file {fname}, sheet {sheet}')
+def check_for_duplicates(df):
     indexes = list(df.index)
+    duplicates = []
     for duplicate in set([x for x in indexes if indexes.count(x) > 1]):
-        _logger.warning(f" Duplicated row '{duplicate}' found in file '{fname}'"
-                        f"in sheet '{sheet}'.")
-
+        duplicates.append(duplicate)
+    if duplicates:
+        raise ValueError(duplicates)
 
 def run():
     """Entry point for console_scripts

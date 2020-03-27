@@ -180,12 +180,31 @@ def main(args):
     # start logging
     setup_logging(args.loglevel)
     _logger.debug(f"Starting merge operation...")
-    # read input files
-    _logger.debug(f"Validating files: {args.filelist}")
-    try:
-        validate_files(args.filelist)
-    except ValueError:
-        sys.exit(0)
+    data = populate_data(args)
+    # merge consecutive data frames
+    data = merge_dataframes(args, data)
+    _logger.debug(f"Merged sheets: {list(data.keys())}.")
+    # write result
+    _logger.debug(f"Writing result to {args.output}.")
+    write(args.output, data)
+    _logger.info(f"Merge complete.")
+
+
+def merge_dataframes(args, data):
+    _logger.debug(f"Joining data using {args.resolve} to "
+                  "resolve merge conflicts.")
+    for k, v in data.items():
+        try:
+            data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
+            data[k] = validate_dataframe(data[k]) if args.validate else data[k]
+        except ValueError:
+            raise ValueError(f"Empty or duplicated cell in merged dataframe "
+                             f"in sheet {k}"
+                             f"in column '{v.index.name}'")
+    return data
+
+
+def populate_data(args):
     data = OrderedDict()
     for od, fname in [(read(fname, index_col=args.index), fname) for fname in args.filelist]:
         if isinstance(od, (OrderedDict, dict)):
@@ -205,22 +224,7 @@ def main(args):
             except ValueError:
                 raise ValueError(f"Empty or duplicated cell in file '{fname}' "
                                  f"in column '{od.index.name}'")
-    # merge consecutive data frames
-    _logger.debug(f"Joining data using {args.resolve} to "
-                  "resolve merge conflicts.")
-    for k, v in data.items():
-        try:
-            data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
-            data[k] = validate_dataframe(data[k]) if args.validate else data[k]
-        except ValueError:
-            raise ValueError(f"Empty or duplicated cell in merged dataframe "
-                             f"in sheet {k}"
-                             f"in column '{v.index.name}'")
-    _logger.debug(f"Merged sheets: {list(data.keys())}.")
-    # write result
-    _logger.debug(f"Writing result to {args.output}.")
-    write(args.output, data)
-    _logger.info(f"Merge complete.")
+    return data
 
 
 def run():

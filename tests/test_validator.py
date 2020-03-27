@@ -21,14 +21,3 @@ def test_empty_index():
     with pytest.raises(ValueError):
         merge_main(cli)
 
-
-def test_nonexistent_file():
-    cli = ['test_files/nonexistent_file.xlsx',
-           '-o', 'test_files/temporary_outfile.xlsx']
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        merge_main(cli)
-    assert pytest_wrapped_e.type == SystemExit
-    try:
-        os.remove('test_files/temporary_outfile.xlsx')
-    except OSError:
-        pass

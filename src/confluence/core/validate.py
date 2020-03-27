@@ -15,15 +15,32 @@ __license__ = "mit"
 _logger = logging.getLogger(__name__)
 
 
-class QMDataFrameValidator(object):
+class InvalidFileError(Exception):
+    pass
+
+
+class QMValidator(object):
+    """
+    Function: Acts as a base validator class
+    """
+    def __init__(self):
+        self._callbacks = []
+
+    def __call__(self, *args, **kwargs):
+        raise ValueError('Derived classes must implement __call__ function')
+
+    def add_callback(self, func):
+        # if not hasattr('__call__', func):
+        # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
+        self._callbacks.append(func)
+
+
+class QMDataFrameValidator(QMValidator):
     """
     Function: Sets up a series of functions that take in a
     dataframe, check to see if it has any internal conflicts,
     and throws an error if one is found.
     """
-    def __init__(self):
-        self._callbacks = []
-
     def __call__(self, df):
         """
         Function: Cycles through each callback, feeding the
@@ -37,20 +54,15 @@ class QMDataFrameValidator(object):
             df = callback(df)
         return df
 
-    def add_callback(self, func):
-        # if not hasattr('__call__', func):
-        # raise ValueError("Callback functions must have a ‘__call__’ attribute.")
-        self._callbacks.append(func)
 
-
-class QMFileValidator(object):
+class QMFileValidator(QMValidator):
     """
     Function: Sets up a series of functions that take in a
     dataframe, check to see if it has any internal conflicts,
     and throws an error if one is found.
     """
     def __init__(self, errorType):
-        self._callbacks = []
+        super().__init__()
         self._errorType = errorType
 
     def __call__(self, filename):
@@ -68,11 +80,6 @@ class QMFileValidator(object):
                 return
         self.logger(self._errorType)(f"File '{filename}' has failed.")
         raise ValueError()
-
-    def add_callback(self, func):
-        # if not hasattr('__call__', func):
-        #     raise ValueError("Callback functions must have a ‘__call__’ attribute.")
-        self._callbacks.append(func)
 
     def logger(self, type):
         """
@@ -93,19 +100,19 @@ def validate_files(filenames, errorType='ERROR'):
     validate = QMFileValidator(errorType)
     validate.add_callback(check_file_path_exists)
     validate.add_callback(check_url_exists)
-    e = None
+    badFiles = []
     for file in filenames:
         try:
             _logger.info(f"Validating {file}")
             validate(file)
         except ValueError:
-            e = True
+            badFiles.append(file)
             continue
             #  Only raises error at the end
-    if e:
-        _logger.info("One or more files failed validation")
-        raise ValueError()
-
+    if badFiles:
+        msg = '\t\n'.join(['The following files failed validation'] + badFiles)
+        _logger.error(msg)
+        raise InvalidFileError(msg)
 
 
 def check_file_path_exists(filename):
@@ -139,9 +146,6 @@ def check_url_exists(filename):
     except (urllib.request.HTTPError, ValueError):
         _logger.info(f"File '{filename}' not validated as a URL.")
         return False
-
-
-
 
 
 def validate_dataframe(df):

@@ -10,7 +10,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 
-import os
+import osf
 import subprocess
 
 import logging
@@ -61,6 +61,7 @@ class MainWindow(BoxLayout):
             job = subprocess.run(command, check=True)
         except subprocess.CalledProcessError:
             _logger.error(f"Command {commandString} failed.")
+            pass
         # report on success/failure
         if job.returncode == 0:
             self.show_status("Merge completed successfully.")

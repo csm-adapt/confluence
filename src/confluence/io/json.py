@@ -23,7 +23,7 @@ def read(fname, **kwds):
         dfod = {}
         try:
             for k, v in data.items():
-                _logger.debug(f"Adding sheet {k} to 'dfod'")
+                _logger.debug(f"Adding sheet {k} to OrderedDictionary of DataFrames (dfod).")
                 dfod[k] = pd.DataFrame(v)
             return dfod
         except:
