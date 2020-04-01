@@ -54,19 +54,30 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
-    # ===============================
-    # New function, with dict instead of if statements
+    def ordered_unique_keys(lhs, rhs):
+        """
+        Returns the unique keys from lhs and rhs while maintaining their order.
+        """
+        # unique columns in lhs
+        left = list(OrderedDict((k, None) for k in lhs.columns.to_list()))
+        # unique columns in rhs
+        right = list(OrderedDict((k, None) for k in rhs.columns.to_list()))
+        # unique columns in (lhs + rhs), unique columns in (rhs + lhs)
+        return list(OrderedDict((k, None) for k in left + right))
+    # check merge
     left = lhs.combine_first(rhs).sort_index()
     right = rhs.combine_first(lhs).sort_index()
-    equal = left.equals(right)
+    # TODO: Dates are not handled properly.
+    equal = left.fillna('').equals(right.fillna(''))
     if equal:
-        result = left
+        return left[ordered_unique_keys(lhs, rhs)]
     else:
         _logger.debug(f"{left == right}")
-        try:
-            result = {MergeMethod.FIRST: left,
-                      MergeMethod.SECOND: right}[resolution]
-        except KeyError:
+        if resolution is MergeMethod.FIRST:
+            result = left[ordered_unique_keys(lhs, rhs)]
+        elif resolution is MergeMethod.SECOND:
+            result = right[ordered_unique_keys(rhs, lhs)]
+        else:
             raise ValueError("An unresolved merge conflict was identified.")
     # remove duplicate columns, if they exist.
     return result.T.loc[~result.T.index.duplicated(keep='first'), :].T.shape
