@@ -56,17 +56,10 @@ def merge(lhs, rhs, resolution=None):
         Merged data.
     """
     _logger.info(f"Merging {lhs} and {rhs}")
-    def key_preference(lhs, rhs):
-        left = lhs.df.columns.to_list()
-        right = rhs.df.columns.to_list()
-        return {
-            "left": left + list(sorted(set(left + right) - set(right))),
-            "right": right + list(sorted(set(right + left) - set(left)))
-        }
-    # keys
-    pref = key_preference(lhs, rhs)
+
     def ordered_unique_keys(lhs, rhs):
         """
+        Params: lhs, rhs: Containers containing dataframes
         Returns the unique keys from lhs and rhs while maintaining their order.
         """
         # unique columns in lhs
@@ -76,12 +69,14 @@ def merge(lhs, rhs, resolution=None):
         # unique columns in (lhs + rhs), unique columns in (rhs + lhs)
         return list(OrderedDict((k, None) for k in left + right))
     # check merge
-    left = lhs.df.combine_first(rhs).sort_index()
-    right = rhs.df.combine_first(lhs).sort_index()
+
+    left = lhs.df.combine_first(rhs.df).sort_index()
+    right = rhs.df.combine_first(lhs.df).sort_index()
     # TODO: Dates are not handled properly.
     equal = left.fillna('').equals(right.fillna(''))
     if equal:
-        return left[ordered_unique_keys(lhs, rhs)]
+        lhs.df = left[ordered_unique_keys(lhs, rhs)]
+        return lhs
     else:
         _logger.debug(f"{left == right}")
         if resolution is MergeMethod.FIRST:
@@ -91,7 +86,8 @@ def merge(lhs, rhs, resolution=None):
         else:
             raise ValueError("An unresolved merge conflict was identified.")
     # remove duplicate columns, if they exist.
-    return result.T.loc[~result.T.index.duplicated(keep='first'), :].T.shape
+    lhs.df = result.T.loc[~result.T.index.duplicated(keep='first'), :].T
+    return lhs
 
 
 def parse_args(args):
