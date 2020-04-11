@@ -38,7 +38,7 @@ def expected_accept_second():
 def test_simple_merge(expected_merge):
     df1 = read("test_files/123-ABC.xlsx", index_col="foo")['Sheet1']
     df2 = read("test_files/456-DEF.xlsx", index_col="foo")['Sheet1']
-    actual = merge_merge(df1, df2)
+    actual = merge_merge(df1, df2).df
     assert_frame_equal(actual, expected_merge)
 
 
@@ -59,14 +59,14 @@ def test_cli():
 def test_merge_conflict_accept_first(expected_accept_first):
     df1 = read("test_files/123-ABC.xlsx", index_col="foo")['Sheet1']
     df2 = read("test_files/123-DEF.xlsx", index_col="foo")['Sheet1']
-    actual = merge_merge(df1, df2, MergeMethod.FIRST)
+    actual = merge_merge(df1, df2, MergeMethod.FIRST).df
     assert_frame_equal(actual, expected_accept_first)
 
 
 def test_merge_conflict_accept_second(expected_accept_second):
     df1 = read("test_files/123-ABC.xlsx", index_col="foo")['Sheet1']
     df2 = read("test_files/123-DEF.xlsx", index_col="foo")['Sheet1']
-    actual = merge_merge(df1, df2, MergeMethod.SECOND)
+    actual = merge_merge(df1, df2, MergeMethod.SECOND).df
     assert_frame_equal(actual, expected_accept_second)
 
 
@@ -77,14 +77,9 @@ def test_merge_conflict_from_cli(expected_accept_first):
            '-m', 'keep_first',
            '-o', 'test_files/temporary_outfile.xlsx']
     merge_main(cli)
-    actual = read("test_files/temporary_outfile.xlsx", index_col="foo")['Sheet1']
+    actual = read("test_files/temporary_outfile.xlsx", index_col="foo")['Sheet1'].df
     assert_frame_equal(expected_accept_first, actual)
     try:
         os.remove('test_files/temporary_outfile.xlsx')
     except OSError:
         pass
-
-
-
-
-

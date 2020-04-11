@@ -15,23 +15,27 @@ class TestReadMethods(unittest.TestCase):
 
     def test_read_feature_log(self):
         # TODO: write tests for Quality Made build logs for features.
-        result = None
-        ifiles = ["data/"
-                  "Feature 4/"
-                  "Weld Logs Feature 4/"
-                  f"N00014-004-00{i}.doc" for i in range(1, 6)]
 
-        for fname in ifiles:
-            df = read(fname, index_col=0)
-            if result is None:
-                result = df
-            else:
-                try:
-                    result = merge(result, df, resolution=MergeMethod.ABORT)
-                except:
-                    print(result == df)
-        print(result)
+        # Commenting this out until build.py is modified to output our modified container, instead of a dataframe.
         pass
+
+        # result = None
+        # ifiles = ["data/"
+        #           "Feature 4/"
+        #           "Weld Logs Feature 4/"
+        #           f"N00014-004-00{i}.doc" for i in range(1, 6)]
+        #
+        # for fname in ifiles:
+        #     container = read(fname, index_col=0)
+        #     if result is None:
+        #         result = container
+        #     else:
+        #         try:
+        #             result = merge(result, container, resolution=MergeMethod.ABORT)
+        #         except:
+        #             print(result == container)
+        # print(result)
+        # pass
 
 
 if __name__ == '__main__':

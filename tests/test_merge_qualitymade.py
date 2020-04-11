@@ -10,7 +10,7 @@ _logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def old_log():
-    return read("data/Feature 4/LHW-build.xlsx")['build'].set_index("Sample Name")
+    return read("data/Feature 4/LHW-build.xlsx")['build'].df.set_index("Sample Name")
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def merged_features():
     return reduce(partial(merge, resolution=MergeMethod.SECOND), logs)
 
 
-def test_merge_qualitymade_feature_logs(merged_features):
+def test_merge_qualitymade_feature_logs():
     # TODO: write tests to check that Quality Made feature logs merge properly.
     # result = merged_features
     # # check result
@@ -29,7 +29,7 @@ def test_merge_qualitymade_feature_logs(merged_features):
     pass
 
 
-def test_merge_qualitymade_update(old_log, merged_features):
+def test_merge_qualitymade_update(old_log):
     # TODO: write tests to check that Quality Made Feature logs and the
     # TODO: current metadata spreadsheet merge cleanly.
     # init = old_log

@@ -112,7 +112,8 @@ def main(args):
     _logger.info('Finished searching files for duplicates')
 
 
-def check_for_duplicates(df):
+def check_for_duplicates(container):
+    df = container.df
     indexes = list(df.index)
     duplicates = []
     for duplicate in set([x for x in indexes if indexes.count(x) > 1]):

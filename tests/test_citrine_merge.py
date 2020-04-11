@@ -45,7 +45,7 @@ def test_simple_merge(expected_merge, output_file):
     f1 = "test_files/123-ABC.xlsx"
     f2 = "test_files/456-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, backup=False)
-    actual = read(ofile, index_col=0)['Sheet1']
+    actual = read(ofile, index_col=0)['Sheet1'].df
     assert_frame_equal(actual, expected_merge)
 
 
@@ -54,7 +54,7 @@ def test_merge_conflict_accept_first(expected_accept_first, output_file):
     f1 = "test_files/123-ABC.xlsx"
     f2 = "test_files/123-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, resolve='old', backup=False)
-    actual = read(ofile, index_col=0)['Sheet1']
+    actual = read(ofile, index_col=0)['Sheet1'].df
     assert_frame_equal(actual, expected_accept_first)
 
 
@@ -63,5 +63,5 @@ def test_merge_conflict_accept_second(expected_accept_second, output_file):
     f1 = "test_files/123-ABC.xlsx"
     f2 = "test_files/123-DEF.xlsx"
     _ = convert([f1, f2], dest=ofile, resolve='new', backup=False)
-    actual = read(ofile, index_col=0)['Sheet1']
+    actual = read(ofile, index_col=0)['Sheet1'].df
     assert_frame_equal(actual, expected_accept_second)

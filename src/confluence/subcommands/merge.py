@@ -55,10 +55,10 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
-
+    _logger.warning(f"Merging {lhs} and {rhs}")
     def key_preference(lhs, rhs):
-        left = lhs.columns.to_list()
-        right = rhs.columns.to_list()
+        left = lhs.df.columns.to_list()
+        right = rhs.df.columns.to_list()
         return {
             "left": left + list(sorted(set(left + right) - set(right))),
             "right": right + list(sorted(set(right + left) - set(left)))
@@ -66,17 +66,20 @@ def merge(lhs, rhs, resolution=None):
     # keys
     pref = key_preference(lhs, rhs)
     # check merge
-    left = lhs.combine_first(rhs).sort_index()
-    right = rhs.combine_first(lhs).sort_index()
+    left = lhs.df.combine_first(rhs.df).sort_index()
+    right = rhs.df.combine_first(lhs.df).sort_index()
     equal = left.equals(right)
     if equal:
-        return left[pref["left"]]
+        lhs.df = left[pref["left"]]
+        return lhs
     else:
         _logger.debug(f"{left == right}")
         if resolution is MergeMethod.FIRST:
-            return left[pref["left"]]
+            lhs.df = left[pref["left"]]
+            return lhs
         elif resolution is MergeMethod.SECOND:
-            return right[pref["right"]]
+            rhs.df = right[pref["right"]]
+            return rhs
         else:
             raise ValueError("An unresolved merge conflict was identified.")
 
@@ -153,6 +156,7 @@ def parse_args(args):
     if isinstance(args, list):
         return parser.parse_args(args)
 
+
 def postprocess_cli(args):
     """
     Changes the command line arguments in place for
@@ -198,9 +202,8 @@ def merge_dataframes(args, data):
             data[k] = reduce(partial(merge, resolution=args.resolve), data[k])
             data[k] = validate_dataframe(data[k]) if args.validate else data[k]
         except ValueError:
-            raise ValueError(f"Empty or duplicated cell in merged dataframe "
-                             f"in sheet {k}"
-                             f"in column '{v.index.name}'")
+            raise ValueError(f"Merge conflict in sheet {k}"
+                             f" in column '{v.df.index.name}'")
     return data
 
 
@@ -210,20 +213,20 @@ def populate_data(args):
         if isinstance(od, (OrderedDict, dict)):
             for k,v in od.items():
                 try:
-                    v = validate_dataframe(v)
+                    v.df = validate_dataframe(v.df)
                     data[k] = data.get(k, []) + [v]
                     _logger.info(f"Dataframe from file {fname} in sheetname {k} has passed validating")
                 except ValueError:
                     raise ValueError(f"Empty or duplicated cell in file '{fname}' "
                                      f"in sheet '{k}' "
-                                     f"in column '{v.index.name}'")
+                                     f"in column '{v.df.index.name}'")
         else:
             try:
                 od = validate_dataframe(od)
                 data['merged'] = data.get('merged', []) + [od]
             except ValueError:
                 raise ValueError(f"Empty or duplicated cell in file '{fname}' "
-                                 f"in column '{od.index.name}'")
+                                 f"in column '{od.df.index.name}'")
     return data
 
 

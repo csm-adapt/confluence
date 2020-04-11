@@ -27,16 +27,17 @@ def set_index(container, key):
     :param key, str or int: Key, either by name, regex, or by position.
     :return: Copy of container with the Index set according to key.
     """
-    df = container
-    if container.index.name is not None:
-        df = container.reset_index()
+    df = container.df
+    if df.index.name is not None:
+        df = df.reset_index()
     try:
         key = df.columns[key]
     except KeyError:
         pass
     if key not in df.columns:
         raise KeyError(f"{key} was not found in the container/table.")
-    return df.set_index(key)
+    container.df = df.set_index(key)
+    return container
 
 
 # ####################
@@ -133,14 +134,14 @@ def to_pif(table,
         by any other parameter, e.g. subsystems, properties, or preparation.
     :return: List of pif.System objects.
     """
-    container = table
+    container = table.df
     if name is None:
-        container = set_index(table, 0)
+        container = set_index(table, 0).df
         name = get_index
     if uid is None:
         uid = url_friendly(name)
     # set default location for data: properties
-    defaultKeys = set(table.columns)
+    defaultKeys = set(container.columns)
     # subsystems
     defaultKeys = defaultKeys - subsystems.keys()
     subsystems = match_regex(subsystems)
