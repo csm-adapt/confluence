@@ -10,8 +10,8 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 
-import osf
-import subprocess
+import os
+from confluence.confluence import main
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -51,21 +51,17 @@ class MainWindow(BoxLayout):
         self.ifiles = []
 
     def merge(self):
-        command = ["confluence-merge",
+        options = ["merge",
                    "-o", self.ofile,
                    "--index-col=0"] + \
                   [x["abspath"] for x in self.ifiles]
-        commandString = ' '.join(command)
-        _logger.info(f"Executing {commandString}")
+        optionString = ' '.join(options)
+        _logger.info(f"Executing 'confluence {optionString}'")
         try:
-            job = subprocess.run(command, check=True)
-        except subprocess.CalledProcessError:
-            _logger.error(f"Command {commandString} failed.")
-            pass
-        # report on success/failure
-        if job.returncode == 0:
+            main(options)
             self.show_status("Merge completed successfully.")
-        else:
+        except subprocess.CalledProcessError:
+            _logger.error(f"Command 'confluence {optionString}' failed.")
             msg = '\n'.join(['Merge failed. Please send files:'] + \
                             [("\t" + x["abspath"]) for x in self.ifiles] + \
                             ["to bkappes@mines.edu."])

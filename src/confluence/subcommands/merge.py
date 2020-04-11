@@ -55,7 +55,7 @@ def merge(lhs, rhs, resolution=None):
     Returns:
         Merged data.
     """
-    _logger.warning(f"Merging {lhs} and {rhs}")
+    _logger.info(f"Merging {lhs} and {rhs}")
     def key_preference(lhs, rhs):
         left = lhs.df.columns.to_list()
         right = rhs.df.columns.to_list()
@@ -65,23 +65,33 @@ def merge(lhs, rhs, resolution=None):
         }
     # keys
     pref = key_preference(lhs, rhs)
+    def ordered_unique_keys(lhs, rhs):
+        """
+        Returns the unique keys from lhs and rhs while maintaining their order.
+        """
+        # unique columns in lhs
+        left = list(OrderedDict((k, None) for k in lhs.df.columns.to_list()))
+        # unique columns in rhs
+        right = list(OrderedDict((k, None) for k in rhs.df.columns.to_list()))
+        # unique columns in (lhs + rhs), unique columns in (rhs + lhs)
+        return list(OrderedDict((k, None) for k in left + right))
     # check merge
-    left = lhs.df.combine_first(rhs.df).sort_index()
-    right = rhs.df.combine_first(lhs.df).sort_index()
-    equal = left.equals(right)
+    left = lhs.df.combine_first(rhs).sort_index()
+    right = rhs.df.combine_first(lhs).sort_index()
+    # TODO: Dates are not handled properly.
+    equal = left.fillna('').equals(right.fillna(''))
     if equal:
-        lhs.df = left[pref["left"]]
-        return lhs
+        return left[ordered_unique_keys(lhs, rhs)]
     else:
         _logger.debug(f"{left == right}")
         if resolution is MergeMethod.FIRST:
-            lhs.df = left[pref["left"]]
-            return lhs
+            result = left[ordered_unique_keys(lhs, rhs)]
         elif resolution is MergeMethod.SECOND:
-            rhs.df = right[pref["right"]]
-            return rhs
+            result = right[ordered_unique_keys(rhs, lhs)]
         else:
             raise ValueError("An unresolved merge conflict was identified.")
+    # remove duplicate columns, if they exist.
+    return result.T.loc[~result.T.index.duplicated(keep='first'), :].T.shape
 
 
 def parse_args(args):
