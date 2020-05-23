@@ -187,6 +187,7 @@ def check_for_sample_name_completeness(df):
    :param column: name of the column that you are checking
    :return: dataframe with all entries in the 'column' filled. If there is an empty one, an error is thrown.
    """
+    _logger.info(f"Checking dataframe {df} for duplicates.")
     if any(pd.isna(df.index)):
         raise ValueError()
     else:
@@ -199,14 +200,12 @@ def check_for_sample_name_uniqueness(df):
    Functionality: Makes sure there are no repeated sample names,
    similar to the 'check_for_merge_conflict' function
    :param df: dataframe to check
-   :param filename: name of the file
-   :param sheetname: name of the sheet
-   :param column: column that is being checked
    :return: dataframe
    """
-    temp = df[df.index.duplicated(keep=False)]
-    for key in temp:
-        instances = temp[key].nunique()
+    _logger.info(f"Checking dataframe {df} for uniqueness.")
+    duplicatedIndexDf = df[df.index.duplicated(keep=False)]
+    for key in duplicatedIndexDf:
+        instances = duplicatedIndexDf[key].nunique()
         if instances > 1:
             raise ValueError()
     _logger.info(f"Dataframe {df} has no repeated sample names")

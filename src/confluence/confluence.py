@@ -26,7 +26,7 @@ from .subcommands.merge import main as merge_main
 from .core.validate import parse_args as validate_parse_args
 from .core.validate import main as validate_main
 from confluence.subcommands.list import parse_args as list_parse_args
-#from confluence.subcommands.list import main as list_main
+from confluence.subcommands.list import main as list_main
 
 from confluence import __version__
 
@@ -37,7 +37,9 @@ __license__ = "mit"
 _logger = logging.getLogger(__name__)
 
 
+
 def parse_args(args):
+
     """Parse command line parameters
 
     Args:
@@ -78,10 +80,6 @@ def parse_args(args):
         help="Check file(s) for internal merge conflicts")
     validate_parser.set_defaults(func=validate_main)
     validate_parse_args(validate_parser)
-    # list
-    list_parser = subparsers.add_parser('list',
-        help="Provide list of some aspect within files (such as duplicated sample names)")
-    list_parse_args(list_parser)
     # add options for this application
     parser.add_argument(
         '--version',
@@ -124,14 +122,13 @@ def main(args):
 def run():
     """Entry point for console_scripts
     """
-    main(sys.argv[1:])
-    # try:
-    #     main(sys.argv[1:])
-    # except Exception as e:
-    #     _logger.error(f"Confluence failed: ({str(e)}).")
-    #     _logger.error("Try setting --index-column to ensure the "
-    #                   "index is set properly.")
-    #     sys.exit(1)
+    try:
+        main(sys.argv[1:])
+    except Exception as e:
+        _logger.error(f"Confluence failed: ({str(e)}).")
+        _logger.error("Try setting --index-column to ensure the "
+                      "index is set properly.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -2,13 +2,13 @@ import logging
 import pandas as pd
 from collections import OrderedDict
 import os
-from .container import Container
+from confluence.base import Container
 _logger = logging.getLogger(__name__)
 
 
 def read(fname, **kwds):
     """
-    Reads a JSON-formatted filename into a Container.
+    Reads a CSV filename into a Container.
     Args:
         fname: File name or file object.
         **kwds: Keywords handled by pandas.read_excel

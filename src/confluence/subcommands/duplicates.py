@@ -40,9 +40,9 @@ def parse_args(args):
         parser = args
     # add required parameters for this application
     parser.add_argument("filelist",
-                        nargs='+',
-                        type=str,
-                        help="List of files to be merged.")
+        nargs='+',
+        type=str,
+        help="List of files to be merged.")
     # add options for this application
     parser.add_argument('--index-column',
         dest="index",
@@ -80,6 +80,16 @@ def postprocess_cli(args):
         args.index = 0
 
 
+def check_for_duplicates(container):
+    df = container.df
+    indexes = list(df.index)
+    duplicates = []
+    for duplicate in set([x for x in indexes if indexes.count(x) > 1]):
+        duplicates.append(duplicate)
+    if duplicates:
+        raise ValueError(duplicates)
+
+
 def main(args):
     """Main entry point allowing external calls to validate files
     Function: Takes an argparse command and validates each file.
@@ -112,15 +122,6 @@ def main(args):
     _logger.info('Finished searching files for duplicates')
 
 
-def check_for_duplicates(container):
-    df = container.df
-    indexes = list(df.index)
-    duplicates = []
-    for duplicate in set([x for x in indexes if indexes.count(x) > 1]):
-        duplicates.append(duplicate)
-    if duplicates:
-        raise ValueError(duplicates)
-
 def run():
     """Entry point for console_scripts
     """
@@ -129,6 +130,7 @@ def run():
     except Exception as e:
         _logger.error(f"Confluence failed: ({str(e)}).")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     run()

@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 from collections import OrderedDict
 import os
-from .container import Container
+from confluence.base import Container
 _logger = logging.getLogger(__name__)
 
 

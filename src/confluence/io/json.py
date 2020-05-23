@@ -1,9 +1,8 @@
 import logging
-import pandas as pd
 from collections import OrderedDict
 import json
-from .container import Container
-import os
+from confluence.base import Container
+
 _logger = logging.getLogger(__name__)
 
 
@@ -28,6 +27,7 @@ def read(fname, **kwds):
                 dfod[k] = Container(v)
             return dfod
         except:
+            _logger.debug(f"Returning single-sheet container {Container(data)} from {fname}")
             return Container(data)
 
     except KeyError:

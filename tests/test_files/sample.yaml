@@ -1,0 +1,11 @@
+dump:
+  test_files/temporary_outfile.xlsx:
+    format: null
+load:
+  test_files/123-ABC.xlsx:
+    format: null
+  test_files/456-DEF.xlsx:
+    format: null
+merge:
+  index column: 0
+  merge method: abort

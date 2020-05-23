@@ -3,6 +3,7 @@ import pandas as pd
 
 class Container:
     def __init__(self, df=None):
+        self._df = None
         self.df = df
 
     @property
@@ -13,7 +14,7 @@ class Container:
     def df(self, obj):
         if obj is None:
             del self._df
-            self.df = None
+            self._df = None
         else:
             try:
                 self._df = pd.DataFrame(obj)
