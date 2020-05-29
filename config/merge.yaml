@@ -1,0 +1,27 @@
+# simple example
+# confluence merge -fmt quality-made -o foo.pif bar.xlsx baz.xlsx
+
+quality-made:
+  xlsx:
+    #header row: 1
+    uid:
+      regex: "Sample Name"
+    fid:
+      regex: "Parent Sample Name"
+  csv:
+    uid:
+      regex: "Sample Name"
+    fid:
+      regex: "Parent Sample Name"
+  citrine:
+    files:
+      regex: "^file.*"
+      case-sensitive: False
+    tags:
+      regex: "^note.*"
+
+nasa-uli:
+  xlsx:
+    header row: 4
+    uid: (,UID,,)
+    fid: (,FID,,)

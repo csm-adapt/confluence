@@ -26,11 +26,6 @@ from enum import Enum, auto
 from ..core.setup import setup_logging
 from ..io import read, write
 from confluence.core.validate import validate_dataframe
-from confluence.core.validate import validate_files
-from .list import main as list_main
-from .list import parse_args as list_parse_args
-from .list import create_cli
-from ..io import read_yaml
 
 
 __author__ = "Branden Kappes"
@@ -124,10 +119,6 @@ def parse_args(args):
             setattr(namespace, self.dest, method)
     # If called as a main function, this processes command line arguments
     # as main. If this is called as part of an action
-    parser.add_argument('--dry-run',
-        dest='dry_run',
-        action='store_true',
-        help='Opt for a dry run instead of merging.')
     parser.add_argument("filelist",
         nargs='+',
         type=str,
@@ -144,10 +135,6 @@ def parse_args(args):
         default="abort",
         action=MergeAction,
         help="Choose how to handle merge conflicts.")
-    parser.add_argument('->',
-    dest='yaml_file',
-    default='config.yaml',
-    help = "Specify the YAML-file name to write to.")
     parser.add_argument('-o',
         '--output',
         default="output.xlsx",
@@ -182,12 +169,6 @@ def postprocess_cli(args):
     :param args: Argument namespace
     :return: None
     """
-    if args.dry_run:
-        list_main(args)
-        sys.exit(0)
-    if '.yaml' in args.filelist[0]:
-        cli_from_yaml(args.filelist[0])
-        sys.exit(0)
     if args.index is None:
         _logger.warning("No merge column was specified. Using the first column.")
         args.index = 0
@@ -238,24 +219,12 @@ def populate_data(args):
         else:
             try:
                 if args.validate:
-                    od = validate_dataframe(od)
+                    od.df = validate_dataframe(od.df)
                 data['merged'] = data.get('merged', []) + [od]
             except ValueError:
                 raise ValueError(f"Empty or duplicated cell in file '{fname}' "
                                  f"in column '{od.df.index.name}'")
     return data
-
-
-def cli_from_yaml(fname):
-    """
-    Function: Reads in a cli from a YAML file, then passes it to the 'main'
-    function directly.
-    :param fname: The name of the YAML file.
-    :return: None, merges the files and exits.
-    """
-    doc = read_yaml(fname)
-    cli = create_cli(doc)
-    main(cli)
 
 
 def main(args):

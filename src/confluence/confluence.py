@@ -25,8 +25,6 @@ from .subcommands.merge import parse_args as merge_parse_args
 from .subcommands.merge import main as merge_main
 from .core.validate import parse_args as validate_parse_args
 from .core.validate import main as validate_main
-from confluence.subcommands.list import parse_args as list_parse_args
-from confluence.subcommands.list import main as list_main
 
 from confluence import __version__
 
