@@ -28,7 +28,7 @@ from .core.validate import main as validate_main
 
 from confluence import __version__
 
-__author__ = "amikulichmines <amikulich@mymail.mines.edu>, bkappes <bkappes@mines.edu>"
+__author__ = "bkappes <bkappes@mines.edu>",  "amikulichmines <amikulich@mymail.mines.edu>"
 __copyright__ = "KMMD, LLC."
 __license__ = "mit"
 

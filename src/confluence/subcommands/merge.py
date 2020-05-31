@@ -119,6 +119,16 @@ def parse_args(args):
             setattr(namespace, self.dest, method)
     # If called as a main function, this processes command line arguments
     # as main. If this is called as part of an action
+    parser.add_argument('--dry-run',
+        dest='dry_run',
+        action='store_true',
+        help='Opt for a dry run instead of merging.')
+    parser.add_argument('-fmt',
+        dest='format')
+    parser.add_argument('-ifmt',
+        dest='input_format')
+    parser.add_argument('-ofmt',
+        dest='output_format')
     parser.add_argument("filelist",
         nargs='+',
         type=str,

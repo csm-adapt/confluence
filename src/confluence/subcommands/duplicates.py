@@ -117,7 +117,7 @@ def main(args):
                 _logger.info(f'Finding duplicates in for file {fname}, sheet {k}')
                 check_for_duplicates(v)
             except ValueError as e:
-                _logger.warning(f" Duplicated row(s) '{e}' found in file '{fname}' "
+                _logger.warning(f"Duplicated row(s) '{e}' found in file '{fname}' "
                                 f"in sheet '{k}'.")
     _logger.info('Finished searching files for duplicates')
 
